@@ -630,3 +630,4 @@
   </build>
 
 </project>
+    <module>tools/cli</module>

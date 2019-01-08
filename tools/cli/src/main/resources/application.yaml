@@ -1,0 +1,5 @@
+---
+logging.config: classpath:logback.xml
+spring.profiles.active: console
+spring.main.banner-mode: "off"
+spring.main.log-startup-info: false
