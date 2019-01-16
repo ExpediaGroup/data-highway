@@ -1,0 +1,26 @@
+{
+  "type": "record",
+  "name": "highway_patrol",
+  "fields": [
+    {
+      "name": "origin",
+      "type": "string"
+    },
+    {
+      "name": "group",
+      "type": "int"
+    },
+    {
+      "name": "seqNumber",
+      "type": "long"
+    },
+    {
+      "name": "timestamp",
+      "type": "long"
+    },
+    {
+      "name": "payload",
+      "type": "string"
+    }
+  ]
+}

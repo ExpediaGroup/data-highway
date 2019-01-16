@@ -1,0 +1,30 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.hotels.road</groupId>
+    <artifactId>road-offramp</artifactId>
+    <version>5.6.11-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>road-offramp-spi</artifactId>
+  <description>Interface of Offramp consumer</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.hotels.road</groupId>
+      <artifactId>road-offramp-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.hotels.road</groupId>
+      <artifactId>road-offramp-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>

@@ -1,0 +1,146 @@
+# Service Level Monitoring
+
+There is a need to show a small number of easy to understand values that
+indicate or proxy the level of service currently and historically provided. Data
+Highway is a complex system that is hard to represent with just a single value.
+At the core Data Highway is an event streaming platform who's performance is
+monitored separately from the configured Destinations which will have their
+performance reported independently.
+
+As a message streaming platform there are two main metrics to show to end users.
+The first is the proportion of success to failure users are experiencing sending
+a message from producer to consumer and the second is how long a successful
+message takes to make that journey.
+
+Since reliability and availability are key features of Data Highway a way is
+needed to measure this aspect of performance with a precision to 5 significant
+digits or better and with a similar level of accuracy.
+
+## Core Streaming Platform
+
+In order to get a consistent level of precision and accuracy a synthetic proxy
+for measurement is used rather than a user's live stream. Although there are
+metrics for observed failures on all traffic, the success of the synthetic
+traffic is used to report the service level. The agent that generates and
+records the status of this stream is named Highway Patrol.
+
+Highway Patrol reports a count of every message it has generated as well as a
+count of the number of those messages that achieved each possible state at the
+end of that message's life. In addition the time taken to get to the
+`SEND_SUCCESS` state and `RECEIVED_CORRECT` state are recorded for each message
+that makes it through to those states.
+
+The two headline figures published by Data Highway as the primary Service Level
+Indicators are the proportion of messages that finish in the `RECEIVED_CORRECT`
+state and the longest time taken by all but the slowest 1% of messages within a
+time period (the p99 transit time). Secondary figures will be presented for the
+Onramp response time and the proportion of messages ending at all the other
+states.
+
+An instance of Highway Patrol should be deployed into each location where there
+is a large concentration of users. The headline Service Level Indicators are
+gathered from the instance running in the same deployment location as Data
+Highway itself. The values from the other instances are made available and give
+an indication of the impact external factors have on a user's experience.
+
+### Method of Operation
+
+Highway Patrol generates a series of messages at a fixed rate. Each message
+is given a sequence number, a group identity, a timestamp, a randomly generated
+payload of a fixed size and a hash value of the payload. In addition there is a
+field to record the instance of Highway Patrol that generated and sent the
+message. The payload consists of a randomly generated string of ASCII
+characters. The messages is sent to Data Highway and received from Data Highway
+using the provided Java clients for both Onramp and Offramp.
+
+The values of each field are calculated as follows:
+* `origin` - A simple string to identify the creator. Messages received with a
+different value are ignored.
+* `seqNumber` - The sequence number for the message. Each message has a value
+`1` higher than the previous.
+* `group` - The value used is `seqNumber % 2520` or the remainder of dividing the
+`seqNumber` by `2520`. Is used to test the ordering guarantees of Data Highway partition
+path.
+* `timestamp` - The number of milliseconds since the Unix epoch when the message
+was generated within Highway Patrol.
+* `payload` - 4096 ASCII characters randomly generated.
+* `payloadHash` - The CRC32 of the payload.
+
+`2520` was chosen as the number of groups in order to have enough groups that
+the hashing function used on the partition path (which for Highway Patrol points
+to the `group` field) would spread the records evenly over the smaller number of
+partitions and so that the number of partitions would divide evenly. `2520` has
+divisors for values up to 10 as well as many others. See the 
+[Wikipedia article](https://en.wikipedia.org/wiki/2520_%28number%29) on the
+number for details.
+
+*NOTE:* The `payloadHash` part of the message is not currently implemented
+
+The values chosen for the size and speed of the available parameters are:
+* Message rate of 100 messages per second
+* Payload size of 4096 characters (4 KiB)
+* Lifetime of a message after which its state is reported is 5 minutes
+
+Once a message has been generated Highway Patrol maintains a record of the
+original message and listens for events relating to it, updating the record
+when those events occur. At the end of the lifetime of the message the
+statistics are updated. Those statistics will then be either picked up or sent
+to the configured metrics system.
+
+The possible states through which a message can progress are:
+* `CREATED` - The message has been generated by Highway Patrol
+* `SENT` - The message has been sent to the Onramp client
+* `SEND_FAILURE` - The Onramp client has responded with an internal error
+* `SEND_SUCCESS` - The Onramp client has reported that the message has been sent
+successfully
+* `SEND_REJECTED` - The Onramp client has reported that Onramp rejected the
+message
+* `RECEIVED_CORRECT` - The message has been consumed in the correct order
+uncorrupted
+* `RECEIVED_OUT_OF_ORDER` - The message has been consumed uncorrupted but out of
+order in its group
+* `RECEIVED_CORRUPTED` - The message has been consumed but the payload was
+altered
+
+When the message lifetime expires a counter for total messages is incremented
+along with a counter corresponding to the final state. There are also two
+timers. If the message has passed through the `SEND_SUCCESS` state then a timer
+is updated to record the time taken to send a message to Onramp. If the
+message has finished in the `RECEIVED_CORRECT` state then another timer is
+updated with the total time that has passed since the message was generated.
+
+## Destinations
+
+### Hive/S3 Destination
+
+Data Highway can be configured to periodically land a stream to S3 and update a
+Hive Meta Store table with a new partition referencing the data on S3 with a
+partition column `acquisition_instant` holding the execution time of the landing.
+Using this data from an instance of Highway Patrol we can calculate some failure
+metrics for the Hive/S3 lander.
+
+The Hive/S3 Destination Service Level Monitor takes all the records landed into
+a single partition and groups them into groups containing each unique `group`
+value which are sorted by `seqNumber`. For each group it then checks that the
+difference between each sequential pair of records in a group is `2520`. If
+any pair has identical values for `seqNumber` then a counter indicating
+duplicate record landing is incremented. If any pair is a multiple of `2520` 
+apart then it will increment a counter indicating missing data. If any record
+has a group value that is not equal to `seqNumber % 2520` then another counter
+is incremented indicating corrupted sequence values. The `payloadHash` of each
+record is compared to the CRC32 of the `payload` value. If they are not equal
+then a counter is incremented.
+
+The maximum `seqNumber` values for each group are recorded for the next
+partition check. If there are maximum `seqNumber` values for the previous
+partition then the Service Level Monitor will check that these are exactly
+`2520` less than the minimum values found in the current partition. If they are
+found to not to be then a counter is incremented.
+
+If any of the above counters is greater than zero then there was an error landing
+that partition.
+
+The data landed to Hive/S3 has no ordering guarantees within a partition so no
+checks for ordering within a partition are carried out. However ordering between
+partitions are guaranteed and the minimum/maximum `seqNumber` checks ensure that
+this guarantee is honoured.

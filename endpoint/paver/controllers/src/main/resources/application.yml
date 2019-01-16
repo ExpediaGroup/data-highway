@@ -1,0 +1,6 @@
+---
+metrics.base: road-paver
+
+graphite:
+  endpoint: disabled
+  publishPeriodMs: 60000

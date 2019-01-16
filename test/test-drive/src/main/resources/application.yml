@@ -1,0 +1,9 @@
+---
+paver.authorisation:
+  cidr-blocks: 0.0.0.0/0
+  authorities: "*"
+server.ssl:
+  key-store: "classpath:test-drive.jks"
+  key-store-password: "test-drive"
+  key-store-type: "PKCS12"
+  key-alias: "test-drive"

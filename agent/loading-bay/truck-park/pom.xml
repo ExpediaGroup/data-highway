@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.hotels.road</groupId>
+    <artifactId>road-loading-bay</artifactId>
+    <version>5.6.11-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>road-truck-park</artifactId>
+  <packaging>pom</packaging>
+  <description>Application that consumes a batch of a road's data from Kafka up to a given set of partition offsets
+    and stream it to S3 in Avro format.</description>
+
+  <modules>
+    <module>app</module>
+    <module>spi</module>
+    <module>core</module>
+    <module>avro</module>
+    <module>s3</module>
+    <module>road-decoder</module>
+    <module>road-schema</module>
+    <module>integration-tests</module>
+  </modules>
+
+</project>

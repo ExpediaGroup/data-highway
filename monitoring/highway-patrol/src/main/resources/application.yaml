@@ -1,0 +1,9 @@
+---
+streamName: highway_patrol
+messageHz: 2
+senderThreads: 4
+maxBatchSize: 20
+bufferSize: 1000
+
+endpoints.prometheus.enabled: true
+management.endpoints.web.exposure.include: info,health,prometheus
