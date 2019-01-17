@@ -22,8 +22,9 @@
   </description>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com:HotelsDotCom/data-highway.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:HotelsDotCom/data-highway.git</developerConnection>
+    <connection>scm:git:git@github.com:HotelsDotCom/data-highway.git</connection>
+    <developerConnection>scm:git:git@github.com:HotelsDotCom/data-highway.git</developerConnection>
+    <url>https://github.com/HotelsDotCom/data-highway</url>
     <tag>HEAD</tag>
   </scm>
 
