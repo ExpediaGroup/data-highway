@@ -60,82 +60,87 @@ import reactor.core.publisher.Flux;
 )
 public class OfframpConsole implements Callable<Void> {
 
-  private PrintStream msgout;
-  private PrintStream cliout;
+  // Configure the default message and CLI output
+  PrintStream msgout = System.out;
+  PrintStream cliout = System.err;
+
+  // Required options
 
   @Option(
       names = { "-h", "--host"}, required = true,
       description = "Cluster of Data Highway that Offramp CLI client will connect (required).")
-  private String host;
-
-  @Option(
-      names = { "-u", "--username"}, required = true,
-      description = "User name of the account to consume messages (required).")
-  private String username;
-
-  @Option(
-      names = { "-p", "--password"}, required = true,
-      description = "Password of the provided user (required).")
-  private String password;
+  String host;
 
   @Option(
       names = { "-r", "--roadName"}, required = true,
       description = "Road of which to consume messages (required).")
-  private String roadName;
+  String roadName;
 
   @Option(
       names = { "-s", "--streamName"}, required = true,
       description = "Stream under which road to consume messages (required).")
-  private String streamName;
+  String streamName;
+
+  // Optional options
+
+  @Option(
+      names = { "-u", "--username"},
+      description = "User name of the account to consume messages.")
+  String username = null;
+
+  @Option(
+      names = { "-p", "--password"},
+      description = "Password of the provided user.")
+  String password = null;
 
   @Option(
       names = { "-o", "--defaultOffset"},
       description = "Option between the latest and earliest available message to Offramp service. "
           + "Enum values: ${COMPLETION-CANDIDATES} (default: ${DEFAULT-VALUE})",
       completionCandidates = DefaultOffsetCandidates.class)
-  private DefaultOffset defaultOffset = DefaultOffset.LATEST;
+  DefaultOffset defaultOffset = DefaultOffset.LATEST;
 
   @Option(
       names = "--initialRequest",
       description = "Defines how many messages will be requested on the first call to Offramp Server "
           + "(default: ${DEFAULT-VALUE}).")
-  private Integer initialRequestAmount = 200;
+  Integer initialRequestAmount = 200;
 
   @Option(
       names = "--replenishingRequest",
       description = "Defines how many messages will be requested on subsequent requests. "
           + "The subsequent requests will only happen after that many messages are consumed downstream "
           + "(default: ${DEFAULT-VALUE}).")
-  private Integer replenishingRequestAmount = 120;
+  Integer replenishingRequestAmount = 120;
 
   @Option(
       names = "--commitIntervalMs",
       description = "Interval that messages will be committed in milliseconds "
           + "(default: ${DEFAULT-VALUE}).")
-  private Long commitIntervalMs = 500L;
+  Long commitIntervalMs = 500L;
 
   @Option(
       names = "--numToConsume",
       description = "Total number of messages to be consumed before termination "
           + "(default: ${DEFAULT-VALUE}).")
-  private Long numToConsume = Long.MAX_VALUE;
+  Long numToConsume = Long.MAX_VALUE;
 
   @Option(
       names = "--flipOutput",
       description = "Offramp messages are streamed into stout and CLI prompts into stderr. "
           + "This option flips the output of messages to stderr and CLI prompts to stout (default: ${DEFAULT-VALUE}).")
-  private boolean flipOutput = false;
+  boolean flipOutput = false;
 
   @Option(
       names = "--tlsTrustAll",
       description = "Disables certificate checking and hostname verification. "
           + "This is intended for testing only (default: ${DEFAULT-VALUE}).")
-  private boolean tlsTrustAll = false;
+  boolean tlsTrustAll = false;
 
   @Option(
       names = "--debug",
       description = "Debug print (default: ${DEFAULT-VALUE}).")
-  private boolean debug = false;
+  boolean debug = false;
 
   @Option(names = {"-v", "--version"},
       versionHelp = true,
@@ -154,14 +159,16 @@ public class OfframpConsole implements Callable<Void> {
 
   @Override
   public Void call() throws Exception {
-    configureOutput();
+    configureOutput();         // this function should be called first
+    validateRequiredOptions(); // ensure that required options are provided
 
     if (debug) {
+      final String hidden = String.join("",
+          Collections.nCopies(this.password != null ? this.password.length() : 0, "*"));
       cliout.print(this.getClass() + " was configured with:\n" +
           "\thost:                      " + this.host                      + "\n" +
           "\tusername:                  " + this.username                  + "\n" +
-          "\tpassword:                  " +
-          String.join("", Collections.nCopies(this.password.length(), "*"))  + "\n" +
+          "\tpassword:                  " + hidden                         + "\n" +
           "\troadName:                  " + this.roadName                  + "\n" +
           "\tstreamName:                " + this.streamName                + "\n" +
           "\tdefaultOffset:             " + this.defaultOffset             + "\n" +
@@ -186,15 +193,13 @@ public class OfframpConsole implements Callable<Void> {
 
   /**
    * Helper function to configure where message and CLI output is directed as well as configure logging
+   * This should be called first to ensure correct output of message and cli logging into the desired stream.
    */
   private void configureOutput() {
     try {
       if (flipOutput) {
         msgout = System.err;
         cliout = System.out;
-      } else {
-        msgout = System.out;
-        cliout = System.err;
       }
 
       // retrieve the ch.qos.logback.classic.LoggerContext
@@ -229,6 +234,16 @@ public class OfframpConsole implements Callable<Void> {
       System.err.println("Error configuring the message and cli output:");
       e.printStackTrace();
       System.exit(Error.OUTPUT_CONFIGURATION.code);
+    }
+  }
+
+  /**
+   * Helper function to ensure that required options are provided from picocli
+   */
+  private void validateRequiredOptions(){
+    if (this.host == null || this.roadName == null || this.streamName == null) {
+      cliout.println("Error acquiring necessary options. (host, roadName or streamName)");
+      System.exit(Error.CONSOLE_OPTIONS_CONFIGURATION.code);
     }
   }
 
@@ -353,8 +368,9 @@ public class OfframpConsole implements Callable<Void> {
    */
   enum Error {
     OUTPUT_CONFIGURATION(1),
-    OFFRAMP_OPTIONS_CONFIGURATION(2),
-    RUN_CLIENT(3);
+    CONSOLE_OPTIONS_CONFIGURATION(2),
+    OFFRAMP_OPTIONS_CONFIGURATION(3),
+    RUN_CLIENT(4);
 
     private int code;
 
