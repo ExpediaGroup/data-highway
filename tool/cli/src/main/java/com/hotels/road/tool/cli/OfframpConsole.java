@@ -250,6 +250,7 @@ public class OfframpConsole implements Callable<Void> {
   /**
    * Helper function to construct OfframpOptions
    */
+  @SuppressWarnings("unchecked")
   private OfframpOptions<JsonNode> getOptions() {
 
     OfframpOptions<JsonNode> options = null;
@@ -257,17 +258,24 @@ public class OfframpConsole implements Callable<Void> {
     try {
       TLSConfig.Factory tlsFactory = tlsTrustAll ? TLSConfig.trustAllFactory() : null;
 
-      options = OfframpOptions
+      OfframpOptions.Builder optionsBuilder = OfframpOptions
           .builder(JsonNode.class)
           .host(host)
           .roadName(roadName)
           .streamName(streamName)
-          .username(username)
-          .password(password)
           .defaultOffset(defaultOffset)
           .requestBuffer(initialRequestAmount, replenishingRequestAmount)
-          .tlsConfigFactory(tlsFactory)
-          .build();
+          .tlsConfigFactory(tlsFactory);
+
+      if (username != null) {
+          optionsBuilder.username(username);
+      }
+      if (password != null) {
+          optionsBuilder.password(password);
+      }
+
+      options = optionsBuilder.build();
+
     } catch (Exception e) {
       cliout.println("Error creating OfframpOptions: ");
       e.printStackTrace();
@@ -280,7 +288,7 @@ public class OfframpConsole implements Callable<Void> {
   /**
    * Helper function to run OfframpClient
    */
-  private void runClient(OfframpOptions<JsonNode> options) {
+  void runClient(OfframpOptions<JsonNode> options) {
 
     try (OfframpClient<JsonNode> client = OfframpClient.create(options)) {
       Committer committer = Committer.create(client, Duration.ofMillis(commitIntervalMs));
