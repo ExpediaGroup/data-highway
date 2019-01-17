@@ -9,7 +9,7 @@ mvn clean package -pl com.hotels.road:road-tool-cli -am -Djib.skip -TC1
 
 ```bash
 ./cli/bin/data-highway-console-offramp.sh \
-    --dataHighwayHost="dh_cluster" \
+    --host="dh_cluster" \
     --username="dh_user_name" \
     --password="dh_user_password" \
     --roadName="dh_road_name" \
