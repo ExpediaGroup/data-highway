@@ -28,12 +28,16 @@ import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import com.hotels.road.offramp.client.Committer;
 import com.hotels.road.offramp.client.OfframpClient;
 import com.hotels.road.offramp.client.OfframpOptions;
 import com.hotels.road.offramp.model.DefaultOffset;
+import com.hotels.road.offramp.model.Message;
 import com.hotels.road.tls.TLSConfig;
 
 import ch.qos.logback.classic.Level;
@@ -63,6 +67,8 @@ public class OfframpConsole implements Callable<Void> {
   // Configure the default message and CLI output
   PrintStream msgout = System.out;
   PrintStream cliout = System.err;
+  ObjectMapper mapper = new ObjectMapper();
+  YAMLMapper yamlMapper = new YAMLMapper();
 
   // Required options
 
@@ -124,6 +130,13 @@ public class OfframpConsole implements Callable<Void> {
       description = "Total number of messages to be consumed before termination "
           + "(default: ${DEFAULT-VALUE}).")
   Long numToConsume = Long.MAX_VALUE;
+
+  @Option(
+      names = "--format",
+      description = "Choose the output format of the logged messages. "
+          + "Enum values: ${COMPLETION-CANDIDATES} (default: ${DEFAULT-VALUE}).",
+      completionCandidates = FormatCandidates.class)
+  Format format = Format.OBJECT;
 
   @Option(
       names = "--flipOutput",
@@ -293,7 +306,7 @@ public class OfframpConsole implements Callable<Void> {
     try (OfframpClient<JsonNode> client = OfframpClient.create(options)) {
       Committer committer = Committer.create(client, Duration.ofMillis(commitIntervalMs));
       Flux.from(client.messages())
-          .doOnNext(msgout::println)
+          .doOnNext(this::msgPrint)
           .doOnError((e) -> cliout.println(e.getMessage()))
           .doOnNext(committer::commit)
           .limitRequest(numToConsume)
@@ -308,6 +321,33 @@ public class OfframpConsole implements Callable<Void> {
   }
 
   /**
+   * Format message and print is to message output.
+   */
+  private void msgPrint(Message<JsonNode> msg) {
+    try {
+      switch (format) {
+        case OBJECT:
+          msgout.println(msg);
+        case JSON:
+          msgout.println(mapper.writeValueAsString(msg));
+        case YAML:
+          msgout.println(yamlMapper.writeValueAsString(msg));
+      }
+    } catch (JsonProcessingException e) {
+      cliout.println(String.format("Error serialising to %s the message: %s",format, msg));
+      cliout.println(getStackTrace(e.getStackTrace()));
+    }
+  }
+
+  private String getStackTrace(StackTraceElement[] stes) {
+    return String.join("\n",
+        Arrays.stream(stes)
+            .map((m) -> "\t" + m.toString())
+            .collect(Collectors.toList())
+    );
+  }
+
+  /**
    * Class that returns a list of {@link DefaultOffset} enumerations.
    */
   private static class DefaultOffsetCandidates extends ArrayList<String> {
@@ -315,6 +355,19 @@ public class OfframpConsole implements Callable<Void> {
       super(
           Arrays.stream(DefaultOffset.values())
               .map(DefaultOffset::name)
+              .collect(Collectors.toList())
+      );
+    }
+  }
+
+  /**
+   * Class that returns a list of {@link DefaultOffset} enumerations.
+   */
+  private static class FormatCandidates extends ArrayList<String> {
+    FormatCandidates() {
+      super(
+          Arrays.stream(Format.values())
+              .map(Format::name)
               .collect(Collectors.toList())
       );
     }
@@ -385,5 +438,11 @@ public class OfframpConsole implements Callable<Void> {
     Error(int num) {
       this.code = num;
     }
+  }
+
+  enum Format {
+    JSON,
+    YAML,
+    OBJECT
   }
 }
