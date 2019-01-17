@@ -31,6 +31,7 @@ import java.util.Set;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ import com.hotels.road.offramp.model.DefaultOffset;
 import com.hotels.road.rest.model.Sensitivity;
 import com.hotels.road.tls.TLSConfig;
 
+@EqualsAndHashCode(exclude = {"payloadTypeFactory"})
 @RequiredArgsConstructor(access = PACKAGE)
 public class OfframpOptions<T> implements Serializable {
   private static final long serialVersionUID = 1L;

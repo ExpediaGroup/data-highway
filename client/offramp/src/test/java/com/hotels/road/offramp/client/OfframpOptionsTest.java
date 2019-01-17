@@ -18,6 +18,8 @@ package com.hotels.road.offramp.client;
 import static java.util.Collections.singleton;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import static com.hotels.road.offramp.model.DefaultOffset.EARLIEST;
@@ -81,5 +83,87 @@ public class OfframpOptionsTest {
   @Test(expected = NullPointerException.class)
   public void nullDefaultOffset() throws Exception {
     OfframpOptions.builder(String.class).defaultOffset(null);
+  }
+
+  @Test
+  public void equality() throws Exception {
+    OfframpOptions<String> left = OfframpOptions
+        .builder(String.class)
+        .username("user")
+        .password("pass")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    OfframpOptions<String> right = OfframpOptions
+        .builder(String.class)
+        .username("user")
+        .password("pass")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    assertEquals(left, right);
+  }
+
+  @Test
+  public void inequality() throws Exception {
+    OfframpOptions<String> o1 = OfframpOptions
+        .builder(String.class)
+        .username("user")
+        .password("pass")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    OfframpOptions<Byte> o2 = OfframpOptions
+        .builder(Byte.class)
+        .username("user")
+        .password("pass")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    assertNotEquals(o1, o2);
+
+    OfframpOptions<String> o3 = OfframpOptions.builder(String.class)
+        .username("user1")
+        .password("password1")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    OfframpOptions<String> o4 = OfframpOptions.builder(String.class)
+        .username("user2")
+        .password("password1")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    assertNotEquals(o3, o4);
+
+    OfframpOptions<String> o5 = OfframpOptions.builder(String.class)
+        .username("user1")
+        .password("password1")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    OfframpOptions<String> o6 = OfframpOptions.builder(String.class)
+        .username("user1")
+        .password("password2")
+        .host("host")
+        .roadName("roadName")
+        .streamName("streamName")
+        .build();
+
+    assertNotEquals(o5, o6);
   }
 }
