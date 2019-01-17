@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels.road</groupId>
     <artifactId>road-truck-park</artifactId>
-    <version>5.6.11-SNAPSHOT</version>
+    <version>6.0.0</version>
   </parent>
 
   <artifactId>road-truck-park-app</artifactId>
