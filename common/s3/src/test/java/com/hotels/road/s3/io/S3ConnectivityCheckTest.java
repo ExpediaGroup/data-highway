@@ -1,4 +1,4 @@
-package com.hotels.road.towtruck;
+package com.hotels.road.s3.io;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,9 +12,9 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-public class TowtruckStartupTest {
+public class S3ConnectivityCheckTest {
 
-  private final TowtruckStartup underTest = new TowtruckStartup();
+  private final S3ConnectivityCheck underTest = new S3ConnectivityCheck();
 
   @MockBean
   private AmazonS3 s3;
@@ -26,7 +26,7 @@ public class TowtruckStartupTest {
             Mockito.any(PutObjectRequest.class)))
         .thenReturn(new PutObjectResult());
 
-    underTest.checkS3(s3, "bucket");
+    underTest.checkS3Put(s3, "bucket", "key");
   }
 
   @Test(expected = SdkClientException.class)
@@ -36,6 +36,6 @@ public class TowtruckStartupTest {
             Mockito.any(PutObjectRequest.class)))
         .thenThrow(new SdkClientException(""));
 
-    underTest.checkS3(s3, "bucket");
+    underTest.checkS3Put(s3, "bucket", "key");
   }
 }

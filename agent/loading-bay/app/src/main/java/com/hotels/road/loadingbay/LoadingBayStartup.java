@@ -1,4 +1,4 @@
-package com.hotels.road.towtruck;
+package com.hotels.road.loadingbay;
 
 import javax.annotation.PostConstruct;
 
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class TowtruckStartup {
+public class LoadingBayStartup {
 
   @Autowired
   private AmazonS3 s3;
