@@ -23,8 +23,6 @@
   </appender>
 
   <logger name="com.hotels" level="DEBUG"/>
-  <logger name="com.amazonaws" level="ERROR"/>
-  <logger name="wiremock" level="ERROR"/>
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>
