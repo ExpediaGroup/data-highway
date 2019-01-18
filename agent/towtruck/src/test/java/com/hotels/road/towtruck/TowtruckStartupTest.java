@@ -1,52 +1,41 @@
 package com.hotels.road.towtruck;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 
+@RunWith(SpringJUnit4ClassRunner.class)
 public class TowtruckStartupTest {
 
-  @Rule
-  public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().httpsPort(8443));
   private final TowtruckStartup underTest = new TowtruckStartup();
 
-  @Before
-  public void before() {
-    // Disable TLS certificate checks
-    System.setProperty("com.amazonaws.sdk.disableCertChecking", "true");
+  @MockBean
+  private AmazonS3 s3;
+
+  @Test
+  public void checkS3() {
+    Mockito.when(
+        s3.putObject(
+            Mockito.any(PutObjectRequest.class)))
+        .thenReturn(new PutObjectResult());
+
+    underTest.checkS3(s3, "bucket");
   }
 
-  @Test(expected = AmazonS3Exception.class)
-  public void testS3WithForbidden() {
-    stubFor(get(urlPathMatching("/.*"))
-        .willReturn(aResponse()
-            .withStatus(403)));
+  @Test(expected = SdkClientException.class)
+  public void checkS3WithError() {
+    Mockito.when(
+        s3.putObject(
+            Mockito.any(PutObjectRequest.class)))
+        .thenThrow(new SdkClientException(""));
 
-    final AmazonS3 s3 = new TowtruckApp().s3("localhost:8443",
-        "");
-
-    underTest.testS3(s3);
-  }
-
-  @Test(expected = AmazonS3Exception.class)
-  public void testS3WithNotFound() {
-    stubFor(get(urlPathMatching("/.*"))
-        .willReturn(aResponse()
-            .withStatus(404)));
-
-    final AmazonS3 s3 = new TowtruckApp().s3("localhost:8443",
-        "");
-
-    underTest.testS3(s3);
+    underTest.checkS3(s3, "bucket");
   }
 }

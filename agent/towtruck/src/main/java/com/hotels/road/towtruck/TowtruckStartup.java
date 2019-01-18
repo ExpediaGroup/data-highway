@@ -1,11 +1,16 @@
 package com.hotels.road.towtruck;
 
+import java.io.ByteArrayInputStream;
+
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +20,8 @@ public class TowtruckStartup {
 
   @Autowired
   private AmazonS3 s3;
+  @Value("${s3.bucket}")
+  private String bucket;
 
   /**
    * Check connections before to start the application.
@@ -23,7 +30,7 @@ public class TowtruckStartup {
   @PostConstruct
   public void postConstruct() {
     try {
-      testS3(s3);
+      checkS3(s3, bucket);
     } catch (Exception e) {
       log.error("Application is going to be stopped.");
       throw e;
@@ -35,9 +42,13 @@ public class TowtruckStartup {
    *
    * @param s3
    */
-  public void testS3(AmazonS3 s3) {
+  void checkS3(AmazonS3 s3, String bucket) {
     try {
-      s3.listBuckets();
+      byte[] source = { 0x0 };
+      ByteArrayInputStream is = new ByteArrayInputStream(source);
+
+      final PutObjectRequest object = new PutObjectRequest(bucket, "test", is, new ObjectMetadata());
+      s3.putObject(object);
     } catch (Exception e) {
       log.error("Unable to connect to Amazon S3.");
       throw e;
