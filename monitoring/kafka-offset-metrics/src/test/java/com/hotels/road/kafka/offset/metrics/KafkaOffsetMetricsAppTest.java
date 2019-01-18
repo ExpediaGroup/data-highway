@@ -18,18 +18,19 @@ package com.hotels.road.kafka.offset.metrics;
 import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.springframework.boot.Banner.Mode.OFF;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -42,11 +43,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
-import com.codahale.metrics.Clock;
 import com.google.common.collect.ImmutableMap;
 
 public class KafkaOffsetMetricsAppTest {
@@ -56,31 +56,6 @@ public class KafkaOffsetMetricsAppTest {
   @Rule
   public EmbeddedKafkaCluster kafka = new EmbeddedKafkaCluster(1);
 
-  @Configuration
-  static class TestConfig {
-    @Primary
-    @Bean
-    Clock clock() {
-      return new Clock() {
-        @Override
-        public long getTick() {
-          return 0L;
-        }
-
-        @Override
-        public long getTime() {
-          return 123000L;
-        }
-      };
-    }
-
-    @Primary
-    @Bean
-    Supplier<String> hostnameSupplier() {
-      return () -> "hostname";
-    }
-  }
-
   @Test
   public void test() throws Exception {
     kafka.createTopic(TOPIC);
@@ -89,38 +64,37 @@ public class KafkaOffsetMetricsAppTest {
       consumer.commitSync(singletonMap(new TopicPartition(TOPIC, 0), new OffsetAndMetadata(1L)));
     }
 
-    try (ServerSocket serverSocket = new ServerSocket(0)) {
-      CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-        try (Socket socket = serverSocket.accept();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-          return reader.readLine();
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      });
+    RestTemplate restTemplate = new RestTemplate();
+    String fooResourceUrl = "http://localhost:8080/actuator/prometheus";
 
-      try (ConfigurableApplicationContext context = runApp(serverSocket.getLocalPort())) {
-        Awaitility.await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {
-          assertThat(future.isDone(), is(true));
-          assertThat(future.join(),
-              is("road.kafka-offset.host.hostname.group.group_id.topic.test_topic.partition.0.offset 1 123"));
-        });
-      }
+    try (ConfigurableApplicationContext context = runApp()) {
+      Awaitility.await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {
+        ResponseEntity<String> response = restTemplate.getForEntity(fooResourceUrl, String.class);
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+        List<String> lines = Arrays.asList(response.getBody().split("\n")).stream().filter(l -> l.startsWith("kafka")).collect(toList());
+
+        //Should contain one metric in the following format
+        // kafka-offset{host="<hostname>",group="group_id",topic="test_topic",partition="0",} 1.0
+        assertThat(lines, hasSize(1));
+        assertThat(lines.get(0), startsWith("kafka-offset"));
+        assertThat(lines.get(0), containsString("group=\"group_id\""));
+        assertThat(lines.get(0), containsString("topic=\"test_topic\""));
+        assertThat(lines.get(0), containsString("partition=\"0\""));
+        assertThat(lines.get(0), endsWith(" 1.0"));
+      });
     }
   }
 
-  private ConfigurableApplicationContext runApp(int port) {
+  private ConfigurableApplicationContext runApp() {
     String[] args = ImmutableMap
         .<String, String> builder()
         .put("kafka.bootstrapServers", kafka.bootstrapServers())
-        .put("graphite.endpoint", "localhost:" + port)
-        .put("metricRate", "1000")
         .build()
         .entrySet()
         .stream()
         .map(e -> String.format("--%s=%s", e.getKey(), e.getValue()))
         .toArray(i -> new String[i]);
-    return new SpringApplicationBuilder(KafkaOffsetMetricsApp.class, TestConfig.class).bannerMode(OFF).run(args);
+    return new SpringApplicationBuilder(KafkaOffsetMetricsApp.class).bannerMode(OFF).run(args);
   }
 
   private KafkaConsumer<String, String> consumer() {
