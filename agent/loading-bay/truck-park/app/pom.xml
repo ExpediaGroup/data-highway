@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels.road</groupId>
     <artifactId>road-truck-park</artifactId>
-    <version>5.6.11-SNAPSHOT</version>
+    <version>6.0.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>road-truck-park-app</artifactId>
@@ -85,11 +85,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <inherited>true</inherited>
-      </plugin>
       <plugin>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>jib-maven-plugin</artifactId>
