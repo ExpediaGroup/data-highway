@@ -40,6 +40,7 @@ public class OnrampServiceConfiguration {
       @Value("${kafka.road.buffer.memory:33554432}") long bufferMemory,
       @Value("${kafka.road.acks:1}") String acks,
       @Value("${kafka.road.compression:none}") String compressionType,
+      @Value("${kafka.producer.request.timeout.ms:10000}") int requestTimeout,
       MeterRegistry registry) {
     Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -48,8 +49,8 @@ public class OnrampServiceConfiguration {
     props.put(ProducerConfig.BATCH_SIZE_CONFIG, batchSize);
     props.put(ProducerConfig.LINGER_MS_CONFIG, lingerMs);
     props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, bufferMemory);
-    props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 10000);
     props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, compressionType);
+    props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeout);
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getCanonicalName());
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getCanonicalName());
 
