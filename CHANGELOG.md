@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - Made onramp producer request timeout configurable.
+- Removed swagger's jq requirement.
 
 ## [6.0.1] - 2019-01-17
 ### Removed
