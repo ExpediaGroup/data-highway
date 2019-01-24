@@ -15,62 +15,54 @@
  */
 package com.hotels.road.tollbooth.app;
 
-import java.io.IOException;
+import java.util.function.Function;
 
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.Disposable;
+import reactor.core.Disposables;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.hotels.road.tollbooth.client.api.PatchSet;
 
 @Slf4j
 @Component
-public class TollBooth extends HealthCheck implements AutoCloseable {
+public class TollBooth implements ApplicationRunner, AutoCloseable {
   private final ObjectMapper mapper;
   private final Consumer<String, String> patchConsumer;
   private final PatchProcessor patchProcessor;
-
-  private final Thread thread;
-  private Throwable exceptionalShutdownReason;
-  private boolean shuttingDown = false;
+  private final Disposable.Swap disposabe = Disposables.swap();
 
   @Autowired
   public TollBooth(ObjectMapper mapper, Consumer<String, String> patchConsumer, PatchProcessor patchProcessor) {
     this.mapper = mapper;
     this.patchConsumer = patchConsumer;
     this.patchProcessor = patchProcessor;
-
-    thread = new Thread(this::processPatches, "tollbooth-worker");
-    thread.start();
   }
 
   @Override
-  protected Result check() throws Exception {
-    if (thread.isAlive()) {
-      return Result.healthy();
-    } else {
-      if (exceptionalShutdownReason != null) {
-        return Result.unhealthy(exceptionalShutdownReason);
-      } else {
-        return Result.unhealthy("Patch processing thread is not running");
-      }
-    }
+  public void run(ApplicationArguments args) throws Exception {
+    disposabe.update(Mono
+        .fromSupplier(() -> patchConsumer.poll(100))
+        .repeat()
+        .flatMapIterable(Function.identity())
+        .map(ConsumerRecord::value)
+        .subscribeOn(Schedulers.single())
+        .subscribe(this::processPatchSet));
   }
 
-  private void processPatches() {
-    try {
-      while (!shuttingDown) {
-        patchConsumer.poll(100).forEach(record -> processPatchSet(record.value()));
-      }
-    } catch (Throwable t) {
-      log.warn("Patch processing thread has died", t);
-      exceptionalShutdownReason = t;
-    }
+  @Override
+  public void close() throws Exception {
+    disposabe.dispose();
   }
 
   private void processPatchSet(String patchSetJson) {
@@ -78,14 +70,8 @@ public class TollBooth extends HealthCheck implements AutoCloseable {
       log.info(patchSetJson);
       PatchSet patchSet = mapper.readValue(patchSetJson, PatchSet.class);
       patchProcessor.processPatch(patchSet);
-    } catch (PatchApplicationException | IOException e) {
+    } catch (Exception e) {
       log.error("Error applying patch to document: {}", patchSetJson, e);
     }
-  }
-
-  @Override
-  public void close() throws Exception {
-    shuttingDown = true;
-    thread.join();
   }
 }
