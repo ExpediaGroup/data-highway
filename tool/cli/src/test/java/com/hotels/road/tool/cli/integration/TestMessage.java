@@ -25,7 +25,7 @@ import lombok.Getter;
 public class TestMessage {
 
     @Getter
-    private static String payload = join("", nCopies(1024, "x"));
+    private static String payload = join("", nCopies(10, "x"));
 
     public static Message<String> getTestMessage()
     {
