@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hotels.road.tool.cli;
+package com.hotels.road.tool.cli.integration;
 
     import org.springframework.context.annotation.Bean;
     import org.springframework.context.annotation.Configuration;
@@ -26,7 +26,7 @@ package com.hotels.road.tool.cli;
 
 @Configuration
 @EnableWebSocket
-public class WebSocketConfiguration implements WebSocketConfigurer {
+public class WebSocketTestConfiguration implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
