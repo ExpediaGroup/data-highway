@@ -38,5 +38,4 @@ class WebSocketHandlerTest extends AbstractWebSocketHandler {
     session.sendMessage(new BinaryMessage(part1.getBytes(UTF_8), false));
     session.sendMessage(new BinaryMessage(part2.getBytes(UTF_8), true));
   }
-
 }

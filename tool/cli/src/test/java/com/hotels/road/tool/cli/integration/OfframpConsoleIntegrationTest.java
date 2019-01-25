@@ -41,12 +41,14 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.User;
 
 import com.google.common.collect.ImmutableMap;
+
 import com.hotels.road.security.RoadWebSecurityConfigurerAdapter;
 import com.hotels.road.tool.cli.OfframpConsole;
 
 import picocli.CommandLine;
 
 public class OfframpConsoleIntegrationTest {
+
   private final ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
   private final ByteArrayOutputStream errBuffer = new ByteArrayOutputStream();
   private final PrintStream stdout = System.out;
@@ -84,28 +86,29 @@ public class OfframpConsoleIntegrationTest {
   @Configuration
   @EnableGlobalMethodSecurity(prePostEnabled = true)
   @SpringBootApplication(exclude = {
-    SessionAutoConfiguration.class,
-    RedisAutoConfiguration.class,
-    RedisRepositoriesAutoConfiguration.class })
+      SessionAutoConfiguration.class,
+      RedisAutoConfiguration.class,
+      RedisRepositoriesAutoConfiguration.class })
   public static class TestSecurityConf {
+
     @Bean
     public WebSecurityConfigurerAdapter webSecurityConfigurerAdapter() {
-        return new RoadWebSecurityConfigurerAdapter() {
-            @SuppressWarnings("deprecation")
-            @Override
-            protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-                auth.inMemoryAuthentication().withUser(
-                    User.withDefaultPasswordEncoder().username("user").password("pass").authorities("ROLE_USER"));
-            }
-        };
+      return new RoadWebSecurityConfigurerAdapter() {
+        @SuppressWarnings("deprecation")
+        @Override
+        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+          auth.inMemoryAuthentication().withUser(
+              User.withDefaultPasswordEncoder().username("user").password("pass").authorities("ROLE_USER"));
+        }
+      };
     }
   }
 
   @AfterClass
   public static void afterClass() {
     if (context != null) {
-        context.close();
-        context = null;
+      context.close();
+      context = null;
     }
   }
 

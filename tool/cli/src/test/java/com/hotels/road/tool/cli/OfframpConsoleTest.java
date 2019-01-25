@@ -36,15 +36,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
+
 import com.hotels.road.offramp.client.OfframpOptions;
 import com.hotels.road.offramp.model.DefaultOffset;
 
 import picocli.CommandLine;
 
-
 public class OfframpConsoleTest {
+
   private final ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
   private final ByteArrayOutputStream errBuffer = new ByteArrayOutputStream();
   private final PrintStream stdout = System.out;
@@ -91,7 +91,7 @@ public class OfframpConsoleTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testGetOptions() throws Exception {
-    String[] args = {"--host=localhost",  "--roadName=route66", "--streamName=left" };
+    String[] args = { "--host=localhost", "--roadName=route66", "--streamName=left" };
 
     final OfframpOptions<JsonNode> ref = OfframpOptions
         .builder(JsonNode.class)
@@ -115,7 +115,7 @@ public class OfframpConsoleTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testHelp() throws Exception {
-    String[] args = {"--help" };
+    String[] args = { "--help" };
 
     CommandLine.call(offrampConsoleSpied, args);
 
