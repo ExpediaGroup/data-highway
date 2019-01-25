@@ -49,7 +49,7 @@ import com.hotels.road.offramp.model.Message;
 import com.hotels.road.security.RoadWebSecurityConfigurerAdapter;
 import com.hotels.road.tls.TLSConfig;
 
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MultiFrameIntegrationTest {
 
@@ -119,7 +119,7 @@ public class MultiFrameIntegrationTest {
         .build();
 
     try (OfframpClient<JsonNode> client = OfframpClient.create(options)) {
-      Message<JsonNode> message = Flux.from(client.messages()).limitRequest(1).blockFirst();
+      Message<JsonNode> message = Mono.from(client.messages()).block();
       assertNotNull(message);
       assertThat(message.getPayload().asText(), is(TestMessage.getPayload()));
     }
