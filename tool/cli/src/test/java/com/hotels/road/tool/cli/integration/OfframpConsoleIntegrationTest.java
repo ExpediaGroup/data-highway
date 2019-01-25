@@ -82,110 +82,110 @@ public class OfframpConsoleIntegrationTest {
   @Configuration
   @EnableGlobalMethodSecurity(prePostEnabled = true)
   @SpringBootApplication(exclude = {
-      SessionAutoConfiguration.class,
-      RedisAutoConfiguration.class,
-      RedisRepositoriesAutoConfiguration.class })
+    SessionAutoConfiguration.class,
+    RedisAutoConfiguration.class,
+    RedisRepositoriesAutoConfiguration.class })
   public static class TestSecurityConf {
-      @Bean
-      public WebSecurityConfigurerAdapter webSecurityConfigurerAdapter() {
-          return new RoadWebSecurityConfigurerAdapter() {
-              @SuppressWarnings("deprecation")
-              @Override
-              protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-                  auth.inMemoryAuthentication().withUser(
-                      User.withDefaultPasswordEncoder().username("user").password("pass").authorities("ROLE_USER"));
-              }
-          };
-      }
+    @Bean
+    public WebSecurityConfigurerAdapter webSecurityConfigurerAdapter() {
+        return new RoadWebSecurityConfigurerAdapter() {
+            @SuppressWarnings("deprecation")
+            @Override
+            protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+                auth.inMemoryAuthentication().withUser(
+                    User.withDefaultPasswordEncoder().username("user").password("pass").authorities("ROLE_USER"));
+            }
+        };
+    }
   }
 
   @AfterClass
   public static void afterClass() {
-      if (context != null) {
-          context.close();
-          context = null;
-      }
+    if (context != null) {
+        context.close();
+        context = null;
+    }
   }
 
   @Before
   public void setStreams() {
-      System.setOut(new PrintStream(outBuffer));
-      System.setErr(new PrintStream(errBuffer));
+    System.setOut(new PrintStream(outBuffer));
+    System.setErr(new PrintStream(errBuffer));
   }
 
   @After
   public void restoreStreams() {
-      System.setOut(stdout);
-      System.setErr(stderr);
+    System.setOut(stdout);
+    System.setErr(stderr);
   }
 
   @Test(timeout = 30_000L)
   public void testMessageOutput() throws Exception {
-      String[] args = {
-          "--host=" + host,
-          "--roadName=dummy", "--streamName=client", "--numToConsume=1",
-          "--username=user", "--password=pass", "--tlsTrustAll"
-      };
+    String[] args = {
+        "--host=" + host,
+        "--roadName=dummy", "--streamName=client", "--numToConsume=1",
+        "--username=user", "--password=pass", "--tlsTrustAll"
+    };
 
-      OfframpConsole offrampConsole = new OfframpConsole();
-      CommandLine.call(offrampConsole, args);
+    OfframpConsole offrampConsole = new OfframpConsole();
+    CommandLine.call(offrampConsole, args);
 
-      String ref = "{"
-          + "\"type\":\"MESSAGE\","
-          + "\"partition\":0,"
-          + "\"offset\":1,"
-          + "\"schema\":2,"
-          + "\"timestampMs\":3,"
-          + "\"payload\":\"xxxxxxxxxx\""
-          + "}"
-          + "\n";
-      assertEquals(ref, outBuffer.toString());
+    String ref = "{"
+        + "\"type\":\"MESSAGE\","
+        + "\"partition\":0,"
+        + "\"offset\":1,"
+        + "\"schema\":2,"
+        + "\"timestampMs\":3,"
+        + "\"payload\":\"xxxxxxxxxx\""
+        + "}"
+        + "\n";
+    assertEquals(ref, outBuffer.toString());
   }
 
   @Test(timeout = 30_000L)
   public void testMessageOutputFlipped() throws Exception {
-      String[] args = {
-          "--host=" + host,
-          "--roadName=dummy", "--streamName=client", "--numToConsume=1",
-          "--username=user", "--password=pass", "--tlsTrustAll",
-          "--flipOutput"
-      };
+    String[] args = {
+        "--host=" + host,
+        "--roadName=dummy", "--streamName=client", "--numToConsume=1",
+        "--username=user", "--password=pass", "--tlsTrustAll",
+        "--flipOutput"
+    };
 
-      OfframpConsole offrampConsole = new OfframpConsole();
-      CommandLine.call(offrampConsole, args);
+    OfframpConsole offrampConsole = new OfframpConsole();
+    CommandLine.call(offrampConsole, args);
 
-      String ref = "{"
-          + "\"type\":\"MESSAGE\","
-          + "\"partition\":0,"
-          + "\"offset\":1,"
-          + "\"schema\":2,"
-          + "\"timestampMs\":3,"
-          + "\"payload\":\"xxxxxxxxxx\""
-          + "}"
-          + "\n";
-      assertEquals(ref, errBuffer.toString());
+    String ref = "{"
+        + "\"type\":\"MESSAGE\","
+        + "\"partition\":0,"
+        + "\"offset\":1,"
+        + "\"schema\":2,"
+        + "\"timestampMs\":3,"
+        + "\"payload\":\"xxxxxxxxxx\""
+        + "}"
+        + "\n";
+    assertEquals(ref, errBuffer.toString());
   }
 
   @Test(timeout = 30_000L)
   public void testMessageOutputYaml() throws Exception {
-      String[] args = {
-          "--host=" + host,
-          "--roadName=dummy", "--streamName=client", "--numToConsume=1",
-          "--username=user", "--password=pass", "--tlsTrustAll",
-          "--format=YAML"
-      };
+    String[] args = {
+        "--host=" + host,
+        "--roadName=dummy", "--streamName=client", "--numToConsume=1",
+        "--username=user", "--password=pass", "--tlsTrustAll",
+        "--format=YAML"
+    };
 
-      OfframpConsole offrampConsole = new OfframpConsole();
-      CommandLine.call(offrampConsole, args);
+    OfframpConsole offrampConsole = new OfframpConsole();
+    CommandLine.call(offrampConsole, args);
 
-      String ref = "---\n"
-          + "type: \"MESSAGE\"\n"
-          + "partition: 0\n"
-          + "offset: 1\n"
-          + "schema: 2\n"
-          + "timestampMs: 3\n"
-          + "payload: \"xxxxxxxxxx\"\n"
-          + "\n";
-      assertEquals(ref, outBuffer.toString());
+    String ref = "---\n"
+        + "type: \"MESSAGE\"\n"
+        + "partition: 0\n"
+        + "offset: 1\n"
+        + "schema: 2\n"
+        + "timestampMs: 3\n"
+        + "payload: \"xxxxxxxxxx\"\n"
+        + "\n";
+    assertEquals(ref, outBuffer.toString());
   }
 }

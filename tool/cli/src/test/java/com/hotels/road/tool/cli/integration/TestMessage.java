@@ -24,12 +24,12 @@ import lombok.Getter;
 
 public class TestMessage {
 
-    @Getter
-    private static String payload = join("", nCopies(10, "x"));
+  @Getter
+  private static String payload = join("", nCopies(10, "x"));
 
-    public static Message<String> getTestMessage()
-    {
-        return new Message<>(0, 1L, 2, 3L, payload);
-    }
+  public static Message<String> getTestMessage()
+  {
+      return new Message<>(0, 1L, 2, 3L, payload);
+  }
 
 }

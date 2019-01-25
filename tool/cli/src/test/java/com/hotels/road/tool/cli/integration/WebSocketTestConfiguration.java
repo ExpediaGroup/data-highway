@@ -16,27 +16,27 @@
 
 package com.hotels.road.tool.cli.integration;
 
-    import org.springframework.context.annotation.Bean;
-    import org.springframework.context.annotation.Configuration;
-    import org.springframework.web.socket.WebSocketHandler;
-    import org.springframework.web.socket.config.annotation.EnableWebSocket;
-    import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-    import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-    import org.springframework.web.socket.handler.PerConnectionWebSocketHandler;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.handler.PerConnectionWebSocketHandler;
 
 @Configuration
 @EnableWebSocket
 public class WebSocketTestConfiguration implements WebSocketConfigurer {
 
-    @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry
-            .addHandler(webSocketHandler(), "/offramp/v2/**")
-            .setAllowedOrigins("*");
-    }
+  @Override
+  public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+    registry
+        .addHandler(webSocketHandler(), "/offramp/v2/**")
+        .setAllowedOrigins("*");
+  }
 
-    @Bean
-    public WebSocketHandler webSocketHandler() {
-        return new PerConnectionWebSocketHandler(WebSocketHandlerTest.class);
-    }
+  @Bean
+  public WebSocketHandler webSocketHandler() {
+    return new PerConnectionWebSocketHandler(WebSocketHandlerTest.class);
+  }
 }

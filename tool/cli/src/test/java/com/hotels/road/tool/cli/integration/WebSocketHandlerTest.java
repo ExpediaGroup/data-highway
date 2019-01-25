@@ -28,15 +28,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = "com.hotels.road.tool.cli")
 class WebSocketHandlerTest extends AbstractWebSocketHandler {
 
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws java.io.IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        String event = mapper.writeValueAsString(TestMessage.getTestMessage());
-        int half = event.length() / 2;
-        String part1 = event.substring(0, half);
-        String part2 = event.substring(half);
-        session.sendMessage(new BinaryMessage(part1.getBytes(UTF_8), false));
-        session.sendMessage(new BinaryMessage(part2.getBytes(UTF_8), true));
-    }
+  @Override
+  public void afterConnectionEstablished(WebSocketSession session) throws java.io.IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    String event = mapper.writeValueAsString(TestMessage.getTestMessage());
+    int half = event.length() / 2;
+    String part1 = event.substring(0, half);
+    String part2 = event.substring(half);
+    session.sendMessage(new BinaryMessage(part1.getBytes(UTF_8), false));
+    session.sendMessage(new BinaryMessage(part2.getBytes(UTF_8), true));
+  }
 
 }
