@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.road.offramp.multiframe;
+package com.hotels.road.multiframe;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -23,7 +23,7 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
-@SpringBootApplication(scanBasePackages = "com.hotels.road.offramp.multiframe")
+@SpringBootApplication(scanBasePackages = "com.hotels.road.multiframe")
 class WebSocketHandlerTest extends AbstractWebSocketHandler {
 
   @Override

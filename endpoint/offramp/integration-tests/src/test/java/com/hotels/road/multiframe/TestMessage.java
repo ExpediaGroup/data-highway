@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hotels.road.offramp.multiframe;
+package com.hotels.road.multiframe;
 
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;

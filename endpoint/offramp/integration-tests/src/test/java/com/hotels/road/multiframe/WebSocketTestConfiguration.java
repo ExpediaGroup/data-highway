@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hotels.road.offramp.multiframe;
+package com.hotels.road.multiframe;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
