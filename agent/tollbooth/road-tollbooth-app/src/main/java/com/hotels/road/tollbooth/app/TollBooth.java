@@ -19,11 +19,11 @@ import java.util.function.Function;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
@@ -36,18 +36,12 @@ import com.hotels.road.tollbooth.client.api.PatchSet;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TollBooth implements ApplicationRunner, AutoCloseable {
   private final ObjectMapper mapper;
   private final Consumer<String, String> patchConsumer;
   private final PatchProcessor patchProcessor;
   private final Disposable.Swap disposabe = Disposables.swap();
-
-  @Autowired
-  public TollBooth(ObjectMapper mapper, Consumer<String, String> patchConsumer, PatchProcessor patchProcessor) {
-    this.mapper = mapper;
-    this.patchConsumer = patchConsumer;
-    this.patchProcessor = patchProcessor;
-  }
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
