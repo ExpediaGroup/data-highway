@@ -68,7 +68,6 @@ public class OfframpConsole implements Callable<Void> {
   PrintStream msgout = System.out;
   PrintStream cliout = System.err;
   ObjectMapper mapper = new ObjectMapper();
-  YAMLMapper yamlMapper = new YAMLMapper();
 
   // Required options
 
@@ -215,6 +214,12 @@ public class OfframpConsole implements Callable<Void> {
         cliout = System.out;
       }
 
+      // change from json to yaml
+      if (format == Format.YAML) {
+          mapper = new YAMLMapper();
+      }
+
+
       // retrieve the ch.qos.logback.classic.LoggerContext
       LoggerContext logCtx = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
 
@@ -327,13 +332,12 @@ public class OfframpConsole implements Callable<Void> {
     try {
       switch (format) {
         case OBJECT:
+          // stringify java object
           msgout.println(msg);
           break;
-        case JSON:
+        default:
+          // format into json or yaml
           msgout.println(mapper.writeValueAsString(msg));
-          break;
-        case YAML:
-          msgout.println(yamlMapper.writeValueAsString(msg));
           break;
       }
     } catch (JsonProcessingException e) {
