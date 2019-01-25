@@ -136,7 +136,7 @@ public class OfframpConsole implements Callable<Void> {
       description = "Choose the output format of the logged messages. "
           + "Enum values: ${COMPLETION-CANDIDATES} (default: ${DEFAULT-VALUE}).",
       completionCandidates = FormatCandidates.class)
-  Format format = Format.OBJECT;
+  Format format = Format.JSON;
 
   @Option(
       names = "--flipOutput",
@@ -328,10 +328,13 @@ public class OfframpConsole implements Callable<Void> {
       switch (format) {
         case OBJECT:
           msgout.println(msg);
+          break;
         case JSON:
           msgout.println(mapper.writeValueAsString(msg));
+          break;
         case YAML:
           msgout.println(yamlMapper.writeValueAsString(msg));
+          break;
       }
     } catch (JsonProcessingException e) {
       cliout.println(String.format("Error serialising to %s the message: %s",format, msg));
