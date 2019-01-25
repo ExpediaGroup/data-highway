@@ -27,7 +27,6 @@ import static org.mockito.Mockito.spy;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.After;

@@ -29,7 +29,7 @@ public class TestMessage {
 
   public static Message<String> getTestMessage()
   {
-      return new Message<>(0, 1L, 2, 3L, payload);
+    return new Message<>(0, 1L, 2, 3L, payload);
   }
 
 }

@@ -76,7 +76,9 @@ public class OfframpConsoleIntegrationTest {
         .map(e -> String.format("--%s=%s", e.getKey(), e.getValue()))
         .toArray(String[]::new);
 
-    context = new SpringApplicationBuilder(WebSocketHandlerTest.class, TestSecurityConf.class).bannerMode(OFF).run(args);
+    context = new SpringApplicationBuilder(WebSocketHandlerTest.class, TestSecurityConf.class)
+        .bannerMode(OFF)
+        .run(args);
   }
 
   @Configuration
