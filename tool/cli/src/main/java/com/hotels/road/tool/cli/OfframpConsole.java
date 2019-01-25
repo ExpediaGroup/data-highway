@@ -102,8 +102,9 @@ public class OfframpConsole implements Callable<Void> {
 
   @Option(
       names = { "-o", "--defaultOffset"},
-      description = "Option between the latest and earliest available message to Offramp service. "
-          + "Enum values: ${COMPLETION-CANDIDATES} (default: ${DEFAULT-VALUE})",
+      description = "Determines whether to start consuming from the earliest or latest offset "
+          + "for a given partition if no commits exist. Enum values: ${COMPLETION-CANDIDATES} "
+          + "(default: ${DEFAULT-VALUE})",
       completionCandidates = DefaultOffsetCandidates.class)
   DefaultOffset defaultOffset = DefaultOffset.LATEST;
 
