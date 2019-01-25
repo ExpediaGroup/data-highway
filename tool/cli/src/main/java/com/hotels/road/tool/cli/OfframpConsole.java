@@ -65,9 +65,11 @@ import reactor.core.publisher.Flux;
 public class OfframpConsole implements Callable<Void> {
 
   // Configure the default message and CLI output
-  PrintStream msgout = System.out;
-  PrintStream cliout = System.err;
-  ObjectMapper mapper = new ObjectMapper();
+  private PrintStream msgout = System.out;
+  private PrintStream cliout = System.err;
+
+  // Configure the default format output to json
+  private ObjectMapper mapper = new ObjectMapper();
 
   // Required options
 

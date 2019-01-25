@@ -18,10 +18,12 @@ package com.hotels.road.tool.cli.integration;
 import static com.hotels.road.rest.model.Sensitivity.PII;
 import static com.hotels.road.rest.model.Sensitivity.PUBLIC;
 import static java.util.Collections.singletonMap;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.boot.Banner.Mode.OFF;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.util.Map;
 import java.util.Properties;
@@ -40,7 +42,9 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.integration.utils.EmbeddedKafkaCluster;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -81,6 +85,11 @@ public class OfframpConsoleAppIntegrationTest {
     private static final String PATCH_TOPIC = "_roads_patch";
     private static final String ROAD1 = "road1";
     private static final String TOPIC1 = "roads." + ROAD1;
+
+    private final ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream errBuffer = new ByteArrayOutputStream();
+    private final PrintStream stdout = System.out;
+    private final PrintStream stderr = System.err;
 
     static final ObjectMapper mapper = new ObjectMapper();
 
@@ -192,6 +201,18 @@ public class OfframpConsoleAppIntegrationTest {
         Integer g;
     }
 
+    @Before
+    public void setStreams() {
+        System.setOut(new PrintStream(outBuffer));
+        System.setErr(new PrintStream(errBuffer));
+    }
+
+    @After
+    public void restoreStreams() {
+        System.setOut(stdout);
+        System.setErr(stderr);
+    }
+
     private static <T> KafkaProducer<String, T> kafkaProducer(Serializer<T> serializer) {
         Properties properties = new Properties();
         properties.put("bootstrap.servers", kafkaCluster.bootstrapServers());
@@ -211,14 +232,72 @@ public class OfframpConsoleAppIntegrationTest {
     }
 
     @Test(timeout = 30_000L)
-    public void testClient() throws Exception {
+    public void testMessageOutput() throws Exception {
         String[] args = {
             "--host=" + host,
             "--roadName=dummy", "--streamName=client", "--numToConsume=1",
             "--username=user", "--password=pass", "--tlsTrustAll"
         };
 
-        CommandLine.call(new OfframpConsole(), args);
+        OfframpConsole offrampConsole = new OfframpConsole();
+        CommandLine.call(offrampConsole, args);
+
+        String ref = "{"
+            + "\"type\":\"MESSAGE\","
+            + "\"partition\":0,"
+            + "\"offset\":1,"
+            + "\"schema\":2,"
+            + "\"timestampMs\":3,"
+            + "\"payload\":\"xxxxxxxxxx\""
+            + "}"
+            + "\n";
+        assertEquals(ref, outBuffer.toString());
     }
 
+    @Test(timeout = 30_000L)
+    public void testMessageOutputFlipped() throws Exception {
+        String[] args = {
+            "--host=" + host,
+            "--roadName=dummy", "--streamName=client", "--numToConsume=1",
+            "--username=user", "--password=pass", "--tlsTrustAll",
+            "--flipOutput"
+        };
+
+        OfframpConsole offrampConsole = new OfframpConsole();
+        CommandLine.call(offrampConsole, args);
+
+        String ref = "{"
+            + "\"type\":\"MESSAGE\","
+            + "\"partition\":0,"
+            + "\"offset\":1,"
+            + "\"schema\":2,"
+            + "\"timestampMs\":3,"
+            + "\"payload\":\"xxxxxxxxxx\""
+            + "}"
+            + "\n";
+        assertEquals(ref, errBuffer.toString());
+    }
+
+    @Test(timeout = 30_000L)
+    public void testMessageOutputYaml() throws Exception {
+        String[] args = {
+            "--host=" + host,
+            "--roadName=dummy", "--streamName=client", "--numToConsume=1",
+            "--username=user", "--password=pass", "--tlsTrustAll",
+            "--format=YAML"
+        };
+
+        OfframpConsole offrampConsole = new OfframpConsole();
+        CommandLine.call(offrampConsole, args);
+
+        String ref = "---\n"
+            + "type: \"MESSAGE\"\n"
+            + "partition: 0\n"
+            + "offset: 1\n"
+            + "schema: 2\n"
+            + "timestampMs: 3\n"
+            + "payload: \"xxxxxxxxxx\"\n"
+            + "\n";
+        assertEquals(ref, outBuffer.toString());
+    }
 }

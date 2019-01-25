@@ -48,7 +48,7 @@ public class OfframpConsoleTest {
     }
 
     @Test
-    public void test_classDefaults() throws Exception {
+    public void testClassDefaults() throws Exception {
         assertThat(offrampConsoleSpied.host, nullValue());
         assertThat(offrampConsoleSpied.username, nullValue());
         assertThat(offrampConsoleSpied.password, nullValue());
@@ -66,7 +66,7 @@ public class OfframpConsoleTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void test_getOptions() throws Exception {
+    public void testGetOptions() throws Exception {
         String[] args = {"--host=localhost",  "--roadName=route66", "--streamName=left" };
 
         final OfframpOptions<JsonNode> ref = OfframpOptions
