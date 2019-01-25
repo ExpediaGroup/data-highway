@@ -15,24 +15,20 @@
  */
 package com.hotels.road.tool.cli;
 
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Properties;
 import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import com.hotels.road.maven.version.DataHighwayVersion;
 import com.hotels.road.offramp.client.Committer;
 import com.hotels.road.offramp.client.OfframpClient;
 import com.hotels.road.offramp.client.OfframpOptions;
@@ -52,7 +48,6 @@ import picocli.CommandLine.Option;
 
 import reactor.core.publisher.Flux;
 
-
 /**
  * Main class of `data-highway-console-offramp` cli tool.
  */
@@ -60,7 +55,7 @@ import reactor.core.publisher.Flux;
     description = "Data Highway Offramp CLI client",
     name = "data-highway-console-offramp",
     sortOptions = false,
-    versionProvider = OfframpConsole.ManifestVersionProvider.class
+    versionProvider = OfframpConsole.DataHighwayVersionProvider.class
 )
 public class OfframpConsole implements Callable<Void> {
 
@@ -74,34 +69,34 @@ public class OfframpConsole implements Callable<Void> {
   // Required options
 
   @Option(
-      names = { "-h", "--host"}, required = true,
+      names = { "-h", "--host" }, required = true,
       description = "Cluster of Data Highway that Offramp CLI client will connect (required).")
   String host;
 
   @Option(
-      names = { "-r", "--roadName"}, required = true,
+      names = { "-r", "--roadName" }, required = true,
       description = "Road of which to consume messages (required).")
   String roadName;
 
   @Option(
-      names = { "-s", "--streamName"}, required = true,
+      names = { "-s", "--streamName" }, required = true,
       description = "Stream under which road to consume messages (required).")
   String streamName;
 
   // Optional options
 
   @Option(
-      names = { "-u", "--username"},
+      names = { "-u", "--username" },
       description = "User name of the account to consume messages.")
   String username = null;
 
   @Option(
-      names = { "-p", "--password"},
+      names = { "-p", "--password" },
       description = "Password of the provided user.")
   String password = null;
 
   @Option(
-      names = { "-o", "--defaultOffset"},
+      names = { "-o", "--defaultOffset" },
       description = "Determines whether to start consuming from the earliest or latest offset "
           + "for a given partition if no commits exist. Enum values: ${COMPLETION-CANDIDATES} "
           + "(default: ${DEFAULT-VALUE})",
@@ -157,7 +152,7 @@ public class OfframpConsole implements Callable<Void> {
       description = "Debug print (default: ${DEFAULT-VALUE}).")
   boolean debug = false;
 
-  @Option(names = {"-v", "--version"},
+  @Option(names = { "-v", "--version" },
       versionHelp = true,
       description = "Print version info and exit")
   boolean versionRequested;
@@ -166,7 +161,6 @@ public class OfframpConsole implements Callable<Void> {
       usageHelp = true,
       description = "Print help info and exit")
   boolean helpRequested;
-
 
   public static void main(String[] args) throws Exception {
     CommandLine.call(new OfframpConsole(), args);
@@ -181,17 +175,17 @@ public class OfframpConsole implements Callable<Void> {
       final String hidden = String.join("",
           Collections.nCopies(this.password != null ? this.password.length() : 0, "*"));
       cliout.print(this.getClass() + " was configured with:\n" +
-          "\thost:                      " + this.host                      + "\n" +
-          "\tusername:                  " + this.username                  + "\n" +
-          "\tpassword:                  " + hidden                         + "\n" +
-          "\troadName:                  " + this.roadName                  + "\n" +
-          "\tstreamName:                " + this.streamName                + "\n" +
-          "\tdefaultOffset:             " + this.defaultOffset             + "\n" +
-          "\tinitialRequestAmount:      " + this.initialRequestAmount      + "\n" +
+          "\thost:                      " + this.host + "\n" +
+          "\tusername:                  " + this.username + "\n" +
+          "\tpassword:                  " + hidden + "\n" +
+          "\troadName:                  " + this.roadName + "\n" +
+          "\tstreamName:                " + this.streamName + "\n" +
+          "\tdefaultOffset:             " + this.defaultOffset + "\n" +
+          "\tinitialRequestAmount:      " + this.initialRequestAmount + "\n" +
           "\treplenishingRequestAmount: " + this.replenishingRequestAmount + "\n" +
-          "\tcommitIntervalMs:          " + this.commitIntervalMs          + "\n" +
-          "\tnumToConsume:              " + this.numToConsume              + "\n" +
-          "\ttlsTrustAll:               " + this.tlsTrustAll               + "\n");
+          "\tcommitIntervalMs:          " + this.commitIntervalMs + "\n" +
+          "\tnumToConsume:              " + this.numToConsume + "\n" +
+          "\ttlsTrustAll:               " + this.tlsTrustAll + "\n");
     }
 
     OfframpOptions<JsonNode> options = getOptions();
@@ -200,7 +194,6 @@ public class OfframpConsole implements Callable<Void> {
 
     return null;
   }
-
 
   //
   // Helper functions
@@ -220,9 +213,8 @@ public class OfframpConsole implements Callable<Void> {
 
       // change output format from json to yaml
       if (format == Format.YAML) {
-          mapper = new YAMLMapper();
+        mapper = new YAMLMapper();
       }
-
 
       // retrieve the ch.qos.logback.classic.LoggerContext
       LoggerContext logCtx = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
@@ -262,7 +254,7 @@ public class OfframpConsole implements Callable<Void> {
   /**
    * Helper function to ensure that required options are provided from picocli
    */
-  private void validateRequiredOptions(){
+  private void validateRequiredOptions() {
     if (this.host == null || this.roadName == null || this.streamName == null) {
       cliout.println("Error acquiring necessary options. (host, roadName or streamName)");
       System.exit(Error.CONSOLE_OPTIONS_CONFIGURATION.code);
@@ -290,14 +282,13 @@ public class OfframpConsole implements Callable<Void> {
           .tlsConfigFactory(tlsFactory);
 
       if (username != null) {
-          optionsBuilder.username(username);
+        optionsBuilder.username(username);
       }
       if (password != null) {
-          optionsBuilder.password(password);
+        optionsBuilder.password(password);
       }
 
       options = optionsBuilder.build();
-
     } catch (Exception e) {
       cliout.println("Error creating OfframpOptions: ");
       e.printStackTrace();
@@ -335,17 +326,17 @@ public class OfframpConsole implements Callable<Void> {
   private void msgPrint(Message<JsonNode> msg) {
     try {
       switch (format) {
-        case OBJECT:
-          // stringify java object
-          msgout.println(msg);
-          break;
-        default:
-          // format into json or yaml
-          msgout.println(mapper.writeValueAsString(msg));
-          break;
+      case OBJECT:
+        // stringify java object
+        msgout.println(msg);
+        break;
+      default:
+        // format into json or yaml
+        msgout.println(mapper.writeValueAsString(msg));
+        break;
       }
     } catch (JsonProcessingException e) {
-      cliout.println(String.format("Error serialising to %s the message: %s",format, msg));
+      cliout.println(String.format("Error serialising to %s the message: %s", format, msg));
       cliout.println(getStackTrace(e.getStackTrace()));
     }
   }
@@ -362,6 +353,7 @@ public class OfframpConsole implements Callable<Void> {
    * Class that returns a list of {@link DefaultOffset} enumerations.
    */
   private static class DefaultOffsetCandidates extends ArrayList<String> {
+
     DefaultOffsetCandidates() {
       super(
           Arrays.stream(DefaultOffset.values())
@@ -375,6 +367,7 @@ public class OfframpConsole implements Callable<Void> {
    * Class that returns a list of {@link DefaultOffset} enumerations.
    */
   private static class FormatCandidates extends ArrayList<String> {
+
     FormatCandidates() {
       super(
           Arrays.stream(Format.values())
@@ -387,51 +380,10 @@ public class OfframpConsole implements Callable<Void> {
   /**
    * {@link IVersionProvider} implementation that returns version information from the jar file's {@code pom.xml} file.
    */
-  static class ManifestVersionProvider implements IVersionProvider {
+  static class DataHighwayVersionProvider implements IVersionProvider {
 
-    public String[] getVersion() throws Exception {
-      String pomVersion = getVersionFromPom();
-      if (pomVersion != null ) { return new String[] { pomVersion }; }
-
-      String propertiesVersion = getVersionFromProperties();
-      if (propertiesVersion != null ) { return new String[] { propertiesVersion }; }
-
-      String packageVersion = getVersionFromPackage();
-      if (packageVersion != null ) { return new String[] { packageVersion }; }
-
-      return new String[] { "" };
-    }
-
-    private String getVersionFromPom() throws Exception {
-      MavenXpp3Reader reader = new MavenXpp3Reader();
-      Model model = reader.read(
-          new InputStreamReader(
-              OfframpConsole.class
-                  .getResourceAsStream("/META-INF/maven/com.hotels.road/road-tool-cli/pom.xml")
-          )
-      );
-      return model.getVersion();
-    }
-
-    private String getVersionFromProperties() throws Exception {
-      Properties p = new Properties();
-      p.load(
-          OfframpConsole.class
-              .getResourceAsStream("/META-INF/maven/com.hotels.road/road-tool-cli/pom.properties")
-      );
-      return p.getProperty("version", null);
-    }
-
-    private String getVersionFromPackage() throws Exception {
-      Package aPackage = OfframpConsole.class.getPackage();
-      String version = null;
-      if (aPackage != null) {
-        version = aPackage.getImplementationVersion();
-        if (version == null) {
-          version = aPackage.getSpecificationVersion();
-        }
-      }
-      return version;
+    public String[] getVersion() {
+      return new String[] { DataHighwayVersion.VERSION };
     }
   }
 
