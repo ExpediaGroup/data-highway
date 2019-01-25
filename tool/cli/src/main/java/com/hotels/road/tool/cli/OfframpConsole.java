@@ -210,11 +210,12 @@ public class OfframpConsole implements Callable<Void> {
   private void configureOutput() {
     try {
       if (flipOutput) {
-        msgout = System.err;
-        cliout = System.out;
+        PrintStream tmp = msgout;
+        msgout = cliout;
+        cliout = tmp;
       }
 
-      // change from json to yaml
+      // change output format from json to yaml
       if (format == Format.YAML) {
           mapper = new YAMLMapper();
       }
