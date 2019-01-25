@@ -27,7 +27,7 @@ public class S3ConnectivityCheck {
       final PutObjectRequest object = new PutObjectRequest(bucket, key, is, new ObjectMetadata());
       s3.putObject(object);
     } catch (Exception e) {
-      log.error("Unable to write an object to AWS S3, bucket {}.", bucket);
+      log.error("Unable to write an object to AWS S3: bucket={}, key={}.", bucket, key);
       throw e;
     }
   }

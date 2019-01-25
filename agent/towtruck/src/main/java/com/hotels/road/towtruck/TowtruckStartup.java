@@ -20,6 +20,8 @@ public class TowtruckStartup {
   private AmazonS3 s3;
   @Value("${s3.bucket}")
   private String bucket;
+  @Value("${s3.keyPrefix}")
+  private String s3KeyPrefix;
 
   /**
    * Check connections before to start the application.
@@ -28,7 +30,7 @@ public class TowtruckStartup {
   @PostConstruct
   public void postConstruct() {
     try {
-      new S3ConnectivityCheck().checkS3Put(s3, bucket, "key");
+      new S3ConnectivityCheck().checkS3Put(s3, bucket, s3KeyPrefix + "/.test");
     } catch (Exception e) {
       log.error("Application is going to be stopped.");
       throw e;
