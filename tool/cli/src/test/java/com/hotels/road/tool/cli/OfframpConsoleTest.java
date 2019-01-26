@@ -27,11 +27,12 @@ import static org.mockito.Mockito.spy;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
@@ -52,6 +53,9 @@ public class OfframpConsoleTest {
 
   private OfframpConsole offrampConsoleSpied;
   private @Captor ArgumentCaptor<OfframpOptions<JsonNode>> offrampOptionsCaptor;
+
+  @Rule
+  public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
   @Before
   public void before() throws Exception {
@@ -121,9 +125,6 @@ public class OfframpConsoleTest {
 
     String[] lines = outBuffer.toString().split("\n");
 
-    Stream<String> stream = Stream.of(lines);
-    Stream<Integer> indexes = Stream.iterate(1, i -> i + 1);
-
     String defaultOffsetHelp = "";
     for (int i = 0; i < lines.length; i++) {
       if (lines[i].contains("--defaultOffset")) {
@@ -133,5 +134,13 @@ public class OfframpConsoleTest {
     assertThat(defaultOffsetHelp, containsString(DefaultOffset.LATEST.name()));
     assertThat(defaultOffsetHelp, containsString(DefaultOffset.EARLIEST.name()));
     assertThat(defaultOffsetHelp, containsString(String.format("(default: %s)", DefaultOffset.LATEST.name())));
+  }
+
+  @Test
+  public void testHostUri() throws Exception {
+    exit.expectSystemExitWithStatus(2);
+    String[] args = { "--host='bla\\:bla:baz'", "--roadName=route66", "--streamName=left" };
+    CommandLine.call(offrampConsoleSpied, args);
+    offrampConsoleSpied.call();
   }
 }

@@ -16,6 +16,7 @@
 package com.hotels.road.tool.cli;
 
 import java.io.PrintStream;
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,7 +72,7 @@ public class OfframpConsole implements Callable<Void> {
   @Option(
       names = { "-h", "--host" }, required = true,
       description = "Cluster of Data Highway that Offramp CLI client will connect (required).")
-  String host;
+  URI host;
 
   @Option(
       names = { "-r", "--roadName" }, required = true,
@@ -255,7 +256,7 @@ public class OfframpConsole implements Callable<Void> {
    * Helper function to ensure that required options are provided from picocli
    */
   private void validateRequiredOptions() {
-    if (this.host == null || this.roadName == null || this.streamName == null) {
+    if (host == null || roadName == null || streamName == null) {
       cliout.println("Error acquiring necessary options. (host, roadName or streamName)");
       System.exit(Error.CONSOLE_OPTIONS_CONFIGURATION.code);
     }
@@ -274,7 +275,7 @@ public class OfframpConsole implements Callable<Void> {
 
       OfframpOptions.Builder optionsBuilder = OfframpOptions
           .builder(JsonNode.class)
-          .host(host)
+          .host(host.toString())
           .roadName(roadName)
           .streamName(streamName)
           .defaultOffset(defaultOffset)
