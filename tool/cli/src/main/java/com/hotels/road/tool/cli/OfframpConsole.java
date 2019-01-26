@@ -60,6 +60,8 @@ import reactor.core.publisher.Flux;
 )
 public class OfframpConsole implements Callable<Void> {
 
+  // TODO: Make cliout as logger to have the same format as other com.hotel.road artifacts.
+
   // Configure the default message and CLI output
   private PrintStream msgout = System.out;
   private PrintStream cliout = System.err;
