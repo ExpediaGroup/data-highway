@@ -18,6 +18,7 @@ package com.hotels.road.weighbridge;
 import static java.util.Collections.singletonMap;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -25,16 +26,11 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.exporter.MetricsServlet;
-import io.prometheus.client.hotspot.DefaultExports;
-
 import com.hotels.road.boot.DataHighwayApplication;
+import com.hotels.road.weighbridge.model.Broker;
 
-//TODO split model out to a separate module so it can be used when building smart rebalancer
 @SpringBootApplication
 public class WeighBridgeApp {
   @Bean
@@ -54,10 +50,8 @@ public class WeighBridgeApp {
   }
 
   @Bean
-  public ServletRegistrationBean<?> prometheusServletRegistration(WeighBridgeMetrics metrics) {
-    CollectorRegistry.defaultRegistry.register(metrics);
-    DefaultExports.initialize();
-    return new ServletRegistrationBean<>(new MetricsServlet(), "/metrics");
+  public AtomicReference<Broker> brokerReference() {
+    return new AtomicReference<>();
   }
 
   public static void main(String[] args) throws Exception {
