@@ -31,6 +31,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -40,6 +41,7 @@ class TruckParkConfiguration {
   static final String GROUP_ID_PREFIX = "truck-park-";
 
   @Bean
+  @Lazy
   Clock clock() {
     return Clock.systemUTC();
   }
