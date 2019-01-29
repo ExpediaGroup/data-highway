@@ -1,0 +1,12 @@
+language: java
+jdk:
+- openjdk8
+os:
+- linux
+cache:
+  directories:
+  - ~/.m2/repository
+install:
+- mvn install -DskipTests -Djib.skip
+script:
+- mvn test -Djib.skip
