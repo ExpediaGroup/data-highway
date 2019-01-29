@@ -55,6 +55,11 @@
       <artifactId>road-traffic-cop</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.hotels.road</groupId>
+      <artifactId>road-s3-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
