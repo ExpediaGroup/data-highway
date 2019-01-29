@@ -23,6 +23,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -45,12 +47,21 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Subscriber;
 
+import ch.qos.logback.classic.Level;
+
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.hotels.road.offramp.model.Error;
 import com.hotels.road.offramp.model.Cancel;
 import com.hotels.road.offramp.model.CommitResponse;
 import com.hotels.road.offramp.model.Message;
@@ -59,6 +70,7 @@ import com.hotels.road.offramp.model.Request;
 
 @RunWith(MockitoJUnitRunner.class)
 public class OfframpClientImplTest {
+
   private @Mock WebSocket.Factory socketFactory;
   private @Mock WebSocket socket;
   private @Mock CommitHandler.Factory commitHandlerFactory;
@@ -169,6 +181,21 @@ public class OfframpClientImplTest {
     Rebalance rebalance = new Rebalance(emptySet());
     underTest.onNext(rebalance);
     await().pollInterval(100, MILLISECONDS).atMost(1, SECONDS).untilAtomic(result, is(rebalance));
+  }
+
+  @Test
+  public void onNext_Error() throws Exception {
+    Logger OfframpClientImplLogger = (Logger) LoggerFactory.getLogger(OfframpClientImpl.class);
+    ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+    listAppender.start();
+    OfframpClientImplLogger.addAppender(listAppender);
+
+    Error error = new Error("That thing was wrong");
+    underTest.onNext(error);
+
+    List<ILoggingEvent> logsList = listAppender.list;
+    assertEquals(logsList.get(0).getMessage(), is("That thing was wrong"));
+    assertEquals(Level.ERROR, logsList.get(0).getLevel());
   }
 
   @Test
