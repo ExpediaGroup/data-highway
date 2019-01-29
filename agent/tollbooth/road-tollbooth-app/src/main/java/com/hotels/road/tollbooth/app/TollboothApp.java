@@ -95,6 +95,7 @@ public class TollboothApp {
     Properties properties = new Properties();
     properties.setProperty("bootstrap.servers", bootstrapServers);
     properties.setProperty("group.id", groupId);
+    properties.setProperty("auto.offset.reset", "earliest");
 
     KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties, new StringDeserializer(),
         new StringDeserializer());

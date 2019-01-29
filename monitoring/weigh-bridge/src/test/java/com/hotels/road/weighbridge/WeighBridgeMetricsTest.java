@@ -18,30 +18,27 @@ package com.hotels.road.weighbridge;
 import static java.util.Collections.singletonList;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.doReturn;
 
-import static io.prometheus.client.Collector.Type.GAUGE;
-
-import static com.hotels.road.weighbridge.WeighBridgeMetrics.LOGDIR_LABELS;
-import static com.hotels.road.weighbridge.WeighBridgeMetrics.REPLICA_LABELS;
+import static com.google.common.collect.Iterables.getOnlyElement;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Objects;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import io.prometheus.client.Collector.MetricFamilySamples;
-import io.prometheus.client.Collector.MetricFamilySamples.Sample;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import lombok.RequiredArgsConstructor;
 
 import com.hotels.road.weighbridge.model.Broker;
 import com.hotels.road.weighbridge.model.LogDir;
@@ -50,15 +47,16 @@ import com.hotels.road.weighbridge.model.Topic;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WeighBridgeMetricsTest {
-  private @Mock Supplier<Broker> supplier;
+  private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
 
   private WeighBridgeMetrics underTest;
 
   @Before
   public void before() throws Exception {
-    underTest = new WeighBridgeMetrics(supplier);
+    underTest = new WeighBridgeMetrics(registry);
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void typical() throws Exception {
     PartitionReplica replica = new PartitionReplica(1, true, false, 3L, 2L, 4L, 5L, 1L);
@@ -68,64 +66,45 @@ public class WeighBridgeMetricsTest {
     List<LogDir> logDirs = singletonList(logDir);
     Broker broker = new Broker(0, "rack", logDirs);
 
-    doReturn(broker).when(supplier).get();
+    underTest.update(broker);
 
-    List<MetricFamilySamples> result = underTest.collect();
-    assertThat(result.size(), is(1));
-    MetricFamilySamples metricFamilySamples = result.get(0);
-    assertThat(metricFamilySamples.name, is("weighbridge"));
-    assertThat(metricFamilySamples.help, is("weighbridge"));
-    assertThat(metricFamilySamples.type, is(GAUGE));
-    List<Sample> samples = metricFamilySamples.samples;
-    assertThat(samples.size(), is(8));
+    Matcher<Iterable<? extends Tag>> diskTags = containsInAnyOrder(tag("broker", "0"), tag("logdir", "path"),
+        tag("rack", "rack"));
+    Matcher<Iterable<? extends Tag>> replicaTags = containsInAnyOrder(tag("broker", "0"), tag("logdir", "path"),
+        tag("rack", "rack"), tag("topic", "topicName"), tag("partition", "1"), tag("leader", "true"),
+        tag("inSync", "false"));
 
-    ImmutableMap<String, Sample> samplesMap = Maps.uniqueIndex(samples, s -> s.name);
+    assertMeter(registry.get("weighbridge_disk_free").meter(), diskTags, 1.0);
+    assertMeter(registry.get("weighbridge_disk_total").meter(), diskTags, 3.0);
+    assertMeter(registry.get("weighbridge_disk_used").meter(), diskTags, 2.0);
+    assertMeter(registry.get("weighbridge_size_on_disk").meter(), replicaTags, 3.0);
+    assertMeter(registry.get("weighbridge_log_size").meter(), replicaTags, 2.0);
+    assertMeter(registry.get("weighbridge_beginning_offset").meter(), replicaTags, 4.0);
+    assertMeter(registry.get("weighbridge_end_offset").meter(), replicaTags, 5.0);
+    assertMeter(registry.get("weighbridge_record_count").meter(), replicaTags, 1.0);
+  }
 
-    ImmutableList<String> labelValues;
-    labelValues = ImmutableList.of("0", "path");
+  void assertMeter(Meter meter, Matcher<Iterable<? extends Tag>> tags, double value) {
+    assertThat(meter.getId().getTags(), tags);
+    assertThat(getOnlyElement(meter.measure()).getValue(), is(value));
+  }
 
-    Sample sample;
+  static Matcher<Tag> tag(String key, String value) {
+    return new TagMatcher(Tag.of(key, value));
+  }
 
-    sample = samplesMap.get("weighbridge_disk_free");
-    assertThat(sample.labelNames, is(LOGDIR_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(1.0));
+  @RequiredArgsConstructor
+  static class TagMatcher extends BaseMatcher<Tag> {
+    private final Tag expected;
 
-    sample = samplesMap.get("weighbridge_disk_total");
-    assertThat(sample.labelNames, is(LOGDIR_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(3.0));
+    @Override
+    public boolean matches(Object item) {
+      Tag actual = (Tag) item;
+      return Objects.equals(expected.getKey(), actual.getKey())
+          && Objects.equals(expected.getValue(), actual.getValue());
+    }
 
-    sample = samplesMap.get("weighbridge_disk_used");
-    assertThat(sample.labelNames, is(LOGDIR_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(2.0));
-
-    labelValues = ImmutableList.of("0", "path", "topicName", "1", "true", "false");
-
-    sample = samplesMap.get("weighbridge_size_on_disk");
-    assertThat(sample.labelNames, is(REPLICA_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(3.0));
-
-    sample = samplesMap.get("weighbridge_log_size");
-    assertThat(sample.labelNames, is(REPLICA_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(2.0));
-
-    sample = samplesMap.get("weighbridge_beginning_offset");
-    assertThat(sample.labelNames, is(REPLICA_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(4.0));
-
-    sample = samplesMap.get("weighbridge_end_offset");
-    assertThat(sample.labelNames, is(REPLICA_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(5.0));
-
-    sample = samplesMap.get("weighbridge_record_count");
-    assertThat(sample.labelNames, is(REPLICA_LABELS));
-    assertThat(sample.labelValues, is(labelValues));
-    assertThat(sample.value, is(1.0));
+    @Override
+    public void describeTo(Description description) {}
   }
 }

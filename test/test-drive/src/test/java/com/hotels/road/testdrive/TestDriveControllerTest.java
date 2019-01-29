@@ -35,7 +35,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
@@ -52,7 +51,6 @@ import com.hotels.road.testdrive.MemoryRoadConsumer.StreamKey;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestDriveController.class)
-@JsonTest
 public class TestDriveControllerTest {
   private final ObjectMapper mapper = new ObjectMapper();
   private @Autowired TestDriveController underTest;
@@ -83,9 +81,8 @@ public class TestDriveControllerTest {
   @Test
   public void getMessages() throws Exception {
     JsonNode node = mapper.createObjectNode().put("foo", "bar");
-    doReturn(singletonList(new Record(0, 1, 2L, new Payload<JsonNode>((byte) 0, 1, node))))
-        .when(messages)
-        .getOrDefault("road1", emptyList());
+    doReturn(singletonList(new Record(0, 1, 2L, new Payload<JsonNode>((byte) 0, 1, node)))).when(messages).getOrDefault(
+        "road1", emptyList());
     mockMvc.perform(get("/testdrive/v1/roads/road1/messages")).andExpect(status().isOk()).andExpect(
         content().json("[{\"foo\":\"bar\"}]"));
   }
