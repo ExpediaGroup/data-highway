@@ -194,7 +194,7 @@ public class OfframpClientImplTest {
     underTest.onNext(error);
 
     List<ILoggingEvent> logsList = listAppender.list;
-    assertEquals(logsList.get(0).getMessage(), is("That thing was wrong"));
+    assertThat(logsList.get(0).getMessage(), is("That thing was wrong"));
     assertEquals(Level.ERROR, logsList.get(0).getLevel());
   }
 
