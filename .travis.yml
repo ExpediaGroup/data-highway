@@ -7,6 +7,6 @@ cache:
   directories:
   - ~/.m2/repository
 install:
-- mvn install -DskipTests -Djib.skip
+- mvn -q install -DskipTests -Djib.skip
 script:
-- mvn test -Djib.skip
+- mvn -q test -Djib.skip
