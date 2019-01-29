@@ -15,27 +15,31 @@
  */
 package com.hotels.road.kafka.offset.metrics;
 
-import static java.util.Collections.emptySortedMap;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 
+import static io.prometheus.client.Collector.Type.GAUGE;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import static scala.collection.JavaConversions.asScalaSet;
 import static scala.collection.JavaConversions.mapAsScalaMap;
 
+import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
+import java.util.function.Supplier;
 
+import io.prometheus.client.Collector;
+import io.prometheus.client.CollectorRegistry;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -44,22 +48,23 @@ import kafka.coordinator.group.GroupOverview;
 import scala.Predef;
 import scala.Tuple2;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.ScheduledReporter;
-
 @RunWith(MockitoJUnitRunner.class)
 public class KafkaOffsetMetricsTest {
 
   @Mock
   private AdminClient adminClient;
+
   @Mock
-  private ScheduledReporter reporter;
+  private Supplier<String> hostnameSupplier;
+
+  @Mock
+  private CollectorRegistry collectorRegistry;
 
   private KafkaOffsetMetrics underTest;
 
   @Before
   public void before() {
-    underTest = new KafkaOffsetMetrics(adminClient, reporter);
+    underTest = new KafkaOffsetMetrics(adminClient, hostnameSupplier, collectorRegistry);
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -73,21 +78,27 @@ public class KafkaOffsetMetricsTest {
         singletonMap(new TopicPartition("topicName", 0), (Object) 1L));
     when(adminClient.listGroupOffsets("groupId")).thenReturn(offsets);
 
-    underTest.sendOffsets();
+    when(hostnameSupplier.get()).thenReturn("localhost");
 
-    ArgumentCaptor<SortedMap<String, Gauge>> gaugesCaptor = ArgumentCaptor.forClass(SortedMap.class);
+    List<Collector.MetricFamilySamples> collection = underTest.collect();
 
-    verify(reporter).report(gaugesCaptor.capture(), eq(emptySortedMap()), eq(emptySortedMap()), eq(emptySortedMap()),
-        eq(emptySortedMap()));
+    assertThat(collection.size(), is(1));
+    Collector.MetricFamilySamples mfs = collection.get(0);
 
-    SortedMap<String, Gauge> gauges = gaugesCaptor.getValue();
-    assertThat(gauges.size(), is(1));
-    Gauge gauge = gauges.get("group.groupId.topic.topicName.partition.0.offset");
-    assertThat(gauge.getValue(), is(1L));
+    assertThat(mfs.name, is("kafka-offset"));
+    assertThat(mfs.type, is(GAUGE));
+    assertThat(mfs.samples, is(not(empty())));
+    assertThat(mfs.samples, is(hasSize(1)));
+
+    Collector.MetricFamilySamples.Sample sample = mfs.samples.get(0);
+
+    assertThat(sample.name, is("kafka-offset"));
+    assertThat(sample.labelNames, is(asList("host", "group", "topic", "partition")));
+    assertThat(sample.labelValues, is(asList("localhost", "groupId", "topicName", "0")));
+    assertThat(sample.value, is(1.0d));
   }
 
   private scala.collection.immutable.Map<TopicPartition, Object> asScalaMap(Map<TopicPartition, Object> map) {
     return mapAsScalaMap(map).toMap(Predef.<Tuple2<TopicPartition, Object>> conforms());
   }
-
 }

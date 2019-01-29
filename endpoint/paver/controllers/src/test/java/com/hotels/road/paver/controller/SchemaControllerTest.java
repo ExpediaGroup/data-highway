@@ -45,7 +45,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -73,7 +72,6 @@ import com.hotels.road.schema.serde.SchemaSerializationModule;
     PaverExceptionHandlers.class,
     GlobalExceptionHandler.class,
     SchemaSerializationModule.class })
-@JsonTest
 public class SchemaControllerTest {
   private static final String ROAD_NAME = "road1";
 
@@ -87,8 +85,7 @@ public class SchemaControllerTest {
   @Autowired
   private GlobalExceptionHandler globalExceptionHandler;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   private MockMvc mockMvc;
 
@@ -109,19 +106,8 @@ public class SchemaControllerTest {
 
   @Before
   public void setup() throws Exception {
-    road = new RoadModel(
-        "road1",
-        RoadType.NORMAL,
-        "my road description",
-        "my team",
-        "a@b.c",
-        true,
-        null,
-        null,
-        of("foo", "bar"),
-        true,
-        Road.DEFAULT_COMPATIBILITY_MODE,
-        emptyMap());
+    road = new RoadModel("road1", RoadType.NORMAL, "my road description", "my team", "a@b.c", true, null, null,
+        of("foo", "bar"), true, Road.DEFAULT_COMPATIBILITY_MODE, emptyMap());
 
     objectMapper.registerModule(new SchemaSerializationModule());
 

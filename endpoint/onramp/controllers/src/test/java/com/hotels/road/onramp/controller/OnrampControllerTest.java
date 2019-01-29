@@ -38,7 +38,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
@@ -61,14 +60,16 @@ import com.hotels.road.rest.controller.common.GlobalExceptionHandler;
 import com.hotels.road.security.CidrBlockAuthorisation;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { OnrampController.class, GlobalExceptionHandler.class })
-@JsonTest
+@SpringBootTest(classes = {
+    OnrampController.class,
+    GlobalExceptionHandler.class,
+    OnrampControllerTest.TestConfiguration.class })
 public class OnrampControllerTest {
   @Configuration
   public static class TestConfiguration {
     public static final MeterRegistry registry = new SimpleMeterRegistry();
 
-    public @Bean MeterRegistry meterRegistry() {
+    public @Bean MeterRegistry testMeterRegistry() {
       return registry;
     }
   }

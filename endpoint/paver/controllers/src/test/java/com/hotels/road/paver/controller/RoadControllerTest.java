@@ -43,7 +43,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -65,7 +64,6 @@ import com.hotels.road.tollbooth.client.api.PatchOperation;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { RoadController.class, PaverExceptionHandlers.class, GlobalExceptionHandler.class })
-@JsonTest
 public class RoadControllerTest {
   @MockBean
   private PaverService paverService;
@@ -86,19 +84,8 @@ public class RoadControllerTest {
 
   @Before
   public void before() {
-    road = new RoadModel(
-        NAME,
-        RoadType.NORMAL,
-        "my road description",
-        "my team",
-        "a@b.c",
-        true,
-        null,
-        null,
-        of("foo", "bar"),
-        true,
-        Road.DEFAULT_COMPATIBILITY_MODE,
-        null);
+    road = new RoadModel(NAME, RoadType.NORMAL, "my road description", "my team", "a@b.c", true, null, null,
+        of("foo", "bar"), true, Road.DEFAULT_COMPATIBILITY_MODE, null);
 
     mockMvc = standaloneSetup(roadController)
         .setControllerAdvice(paverExceptionHandler, globalExceptionHandler)

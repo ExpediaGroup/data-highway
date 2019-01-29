@@ -1,0 +1,3 @@
+---
+endpoints.prometheus.enabled: true
+management.endpoints.web.exposure.include: info,health,prometheus
