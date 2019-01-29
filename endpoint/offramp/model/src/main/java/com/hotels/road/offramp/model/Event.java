@@ -52,7 +52,8 @@ public interface Event {
     COMMIT,
     COMMIT_RESPONSE,
     REBALANCE,
-    CONNECTION;
+    CONNECTION,
+    ERROR;
   }
 
   public static <T> Module module(

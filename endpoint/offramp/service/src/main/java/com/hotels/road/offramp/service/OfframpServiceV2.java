@@ -53,6 +53,7 @@ import com.hotels.road.offramp.model.Commit;
 import com.hotels.road.offramp.model.CommitResponse;
 import com.hotels.road.offramp.model.Connection;
 import com.hotels.road.offramp.model.Event;
+import com.hotels.road.offramp.model.Error;
 import com.hotels.road.offramp.model.Message;
 import com.hotels.road.offramp.model.Rebalance;
 import com.hotels.road.offramp.model.Request;
@@ -143,7 +144,13 @@ public class OfframpServiceV2 implements OfframpService {
       consumer.init(request.getCount(), this::sendRebalance);
       initialised = true;
     }
-    requested = LongMath.saturatedAdd(requested, request.getCount());
+    if (request.getCount() > 0) {
+      requested = LongMath.saturatedAdd(requested, request.getCount());
+    } else if (request.getCount() < 0) {
+      sendError(
+          new IllegalArgumentException(
+              String.format("Requested count cannot be negative value (given %d)", request.getCount())));
+    }
   }
 
   private void handleCommit(Commit commit) {
@@ -176,6 +183,11 @@ public class OfframpServiceV2 implements OfframpService {
   @VisibleForTesting
   void sendRebalance(Set<Integer> assignment) {
     sendEvent(new Rebalance(assignment));
+  }
+
+  @VisibleForTesting
+  void sendError(Exception exception) {
+    sendEvent(new Error(exception.getMessage()));
   }
 
   @VisibleForTesting
