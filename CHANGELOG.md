@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Switched all metrics to micrometer API with prometheus actuator (except truck park).
 - Fixed tests working around the disabling of bean overriding in Spring Boot 2.1.x
+- Modification of the Test Drive certificate to allow multi domains (`localhost` and `test-drive`).
 
 ## [6.0.2] - 2019-01-23
 ### Changed
