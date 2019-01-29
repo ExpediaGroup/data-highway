@@ -15,7 +15,6 @@
  */
 package com.hotels.road.offramp.client;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -30,12 +29,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
@@ -61,6 +58,7 @@ import com.hotels.road.tls.TLSConfig;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebSocketTest {
+
   private @Mock Session session;
   private @Mock EventHandler eventHandler;
   private @Mock ErrorHandler errorHandler;
@@ -142,10 +140,8 @@ public class WebSocketTest {
     underTest.connect();
     RemoteEndpoint.Basic basicRemote = mock(RemoteEndpoint.Basic.class);
     doReturn(basicRemote).when(session).getBasicRemote();
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-    doReturn(output).when(basicRemote).getSendStream();
     underTest.send(new Cancel());
-    assertThat(new String(output.toByteArray(), UTF_8), is("{\"type\":\"CANCEL\"}"));
+    verify(basicRemote).sendBinary(ByteBuffer.wrap("{\"type\":\"CANCEL\"}".getBytes()));
   }
 
   @Test(expected = UncheckedIOException.class)
@@ -153,7 +149,7 @@ public class WebSocketTest {
     underTest.connect();
     RemoteEndpoint.Basic basicRemote = mock(RemoteEndpoint.Basic.class);
     doReturn(basicRemote).when(session).getBasicRemote();
-    doThrow(IOException.class).when(basicRemote).getSendStream();
+    doThrow(IOException.class).when(basicRemote).sendBinary(any(ByteBuffer.class));
     underTest.send(new Cancel());
   }
 

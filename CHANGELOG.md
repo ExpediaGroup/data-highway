@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed tests working around the disabling of bean overriding in Spring Boot 2.1.x
 - Modification of the Test Drive certificate to allow multi domains (`localhost` and `test-drive`).
 - Increased highway patrol transitTime metric window from 30 seconds to 10 minutes.
+- Modification of the WebSocket send implementation used in offramp client. 
 - Implementation of S3 connectivity checks on startup for Loading Bay and Towtruck.
 
 ## [6.0.2] - 2019-01-23
