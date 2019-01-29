@@ -36,7 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -55,7 +54,6 @@ import com.hotels.road.rest.model.HiveDestinationModel;
     HiveDestinationController.class,
     PaverExceptionHandlers.class,
     GlobalExceptionHandler.class })
-@JsonTest
 public class HiveDestinationControllerTest {
   private static final String HIVE_DESTINATION_ENDPOINT = CONTEXT_PATH + "/roads/road1/destinations/hive";
   private static final String DESTINATION_JSON = "{}";

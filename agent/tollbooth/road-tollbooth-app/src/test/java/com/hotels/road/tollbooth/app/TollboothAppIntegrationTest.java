@@ -15,11 +15,19 @@
  */
 package com.hotels.road.tollbooth.app;
 
+import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 import static org.springframework.boot.Banner.Mode.OFF;
 
 import java.net.ServerSocket;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -27,12 +35,16 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.integration.utils.EmbeddedKafkaCluster;
+import org.awaitility.Awaitility;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,9 +68,10 @@ public class TollboothAppIntegrationTest {
 
   private static Map<String, JsonNode> store;
 
+  private static int port;
+
   @BeforeClass
   public static void beforeClass() throws Exception {
-    int port;
     try (ServerSocket socket = new ServerSocket(0)) {
       port = socket.getLocalPort();
     }
@@ -124,6 +137,19 @@ public class TollboothAppIntegrationTest {
     while (store.containsKey("road2")) {
       Thread.sleep(100);
     }
+  }
+
+  @Test(timeout = 20000)
+  public void testMetrics() throws Exception {
+    RestTemplate restTemplate = new RestTemplate();
+    String fooResourceUrl = "http://localhost:" + port + "/actuator/prometheus";
+
+    Awaitility.await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {
+      ResponseEntity<String> response = restTemplate.getForEntity(fooResourceUrl, String.class);
+      assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+      List<String> lines = Arrays.asList(response.getBody().split("\n")).stream().filter(l -> !l.startsWith("#")).collect(toList());
+      assertThat(lines, not(emptyList()));
+    });
   }
 
   @AfterClass

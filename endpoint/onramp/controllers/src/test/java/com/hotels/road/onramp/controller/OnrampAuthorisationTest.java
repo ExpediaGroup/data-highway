@@ -69,7 +69,6 @@ public class OnrampAuthorisationTest {
 
   private @Mock Counter counter;
 
-  @SuppressWarnings("unchecked")
   @Before
   public void before() throws Exception {
     road.setAuthorisation(authorisation);

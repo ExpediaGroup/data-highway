@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -49,8 +48,6 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -58,8 +55,7 @@ import org.apache.kafka.streams.integration.utils.EmbeddedKafkaCluster;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.json.JSONException;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -114,11 +110,12 @@ public class RoadEndpointsIntegrationTest {
   @ClassRule
   public static final EmbeddedKafkaCluster kafkaCluster = new EmbeddedKafkaCluster(NUM_BROKERS);
 
-  private String patchTopic;
-  private String baseUri;
-  private ConfigurableApplicationContext context;
+  private static String patchTopic;
+  private static String baseUri;
+  private static ConfigurableApplicationContext context;
+  private static KafkaConsumer<String, String> patchConsumer;
 
-  private final String TOPIC_PREFIX = "topic.";
+  private static final String TOPIC_PREFIX = "topic.";
   private final RestTemplate rest = newRestTemplate();
 
   private final Schema schema1 = SchemaBuilder
@@ -145,10 +142,7 @@ public class RoadEndpointsIntegrationTest {
     Properties topicConfig = new Properties();
     topicConfig.setProperty("cleanup.policy", "compact");
     kafkaCluster.createTopic(ROADS_TOPIC, 1, 1, topicConfig);
-  }
 
-  @Before
-  public void setUp() throws Exception {
     int port;
     try (ServerSocket socket = new ServerSocket(0)) {
       port = socket.getLocalPort();
@@ -180,6 +174,8 @@ public class RoadEndpointsIntegrationTest {
         .run();
 
     baseUri = String.format("http://localhost:%s", port);
+
+    patchConsumer = createPatchConsumer();
   }
 
   @Configuration
@@ -204,8 +200,8 @@ public class RoadEndpointsIntegrationTest {
     }
   }
 
-  @After
-  public void after() {
+  @AfterClass
+  public static void after() {
     if (context != null) {
       context.close();
     }
@@ -226,7 +222,7 @@ public class RoadEndpointsIntegrationTest {
 
     Awaitility.await().atMost(Duration.FIVE_SECONDS).until(() -> {
       String expected = "{\"documentId\":\"a1\",\"operations\":[{\"op\":\"add\",\"path\":\"\",\"value\":{\"name\":\"a1\",\"topicName\":null,\"description\":\"a1 road\",\"teamName\":\"a1 team\",\"contactEmail\":\"a1@example.org\",\"enabled\":true,\"partitionPath\":\"\",\"metadata\":{},\"schemas\":{},\"destinations\":{},\"status\":null,\"compatibilityMode\":\"CAN_READ_ALL\"}}]}";
-      String actual = readRecords(createKafkaConsumer(patchTopic), 1).iterator().next().value();
+      String actual = readRecords(patchConsumer, 1).get(0);
       assertJsonEquals(expected, actual);
     });
 
@@ -244,14 +240,10 @@ public class RoadEndpointsIntegrationTest {
     assertThat(schemaResult.getStatusCode(), is(HttpStatus.OK));
     assertThat(schemaResult.getBody().getMessage(), is("Request to add a new schema received."));
 
-    KafkaConsumer<String, String> roadsConsumer = createKafkaConsumer(patchTopic);
-
     Awaitility.await().atMost(Duration.FIVE_SECONDS).until(() -> {
-      ConsumerRecords<String, String> records = readRecords(roadsConsumer, 2);
-      Iterator<ConsumerRecord<String, String>> iterator = records.iterator();
-      iterator.next(); // skip the first message
+      List<String> records = readRecords(patchConsumer, 1);
       String expectedPatch = "{\"documentId\":\"a1\",\"operations\":[{\"op\":\"add\",\"path\":\"/schemas/1\",\"value\":{\"schema\":{\"type\":\"record\",\"name\":\"record\",\"fields\":[{\"name\":\"field\",\"type\":\"boolean\"}]},\"version\":1,\"deleted\":false}}]}";
-      assertJsonEquals(expectedPatch, iterator.next().value());
+      assertJsonEquals(expectedPatch, records.get(0));
     });
   }
 
@@ -291,7 +283,7 @@ public class RoadEndpointsIntegrationTest {
 
     Awaitility.await().atMost(Duration.FIVE_SECONDS).until(() -> {
       String expected = "{\"documentId\":\"updated_road\",\"operations\":[{\"op\":\"replace\",\"path\":\"/contactEmail\",\"value\":\"a1@example.org\"},{\"op\":\"replace\",\"path\":\"/description\",\"value\":\"desc\"},{\"op\":\"replace\",\"path\":\"/teamName\",\"value\":\"team a1\"}]}";
-      String actual = readRecords(createKafkaConsumer(patchTopic), 1).iterator().next().value();
+      String actual = readRecords(patchConsumer, 1).get(0);
       assertJsonEquals(expected, actual);
     });
 
@@ -332,13 +324,9 @@ public class RoadEndpointsIntegrationTest {
     assertThat(schemaResult.getStatusCode(), is(HttpStatus.OK));
     assertThat(schemaResult.getBody().getMessage(), is("Request to add a new schema received."));
 
-    KafkaConsumer<String, String> roadsConsumer = createKafkaConsumer(patchTopic);
-
     Awaitility.await().atMost(Duration.FIVE_SECONDS).until(() -> {
-      ConsumerRecords<String, String> records = readRecords(roadsConsumer, 1);
-      Iterator<ConsumerRecord<String, String>> iterator = records.iterator();
       String expectedPatch = "{\"documentId\":\"metaroad\",\"operations\":[{\"op\":\"add\",\"path\":\"/schemas/2\",\"value\":{\"schema\":{\"type\":\"record\",\"name\":\"record\",\"fields\":[{\"name\":\"field\",\"type\":\"boolean\"}]},\"version\":2,\"deleted\":false}}]}";
-      assertJsonEquals(expectedPatch, iterator.next().value());
+      assertJsonEquals(expectedPatch, readRecords(patchConsumer, 1).get(0));
     });
 
   }
@@ -469,31 +457,23 @@ public class RoadEndpointsIntegrationTest {
     }
   }
 
-  private ConsumerRecords<String, String> readRecords(KafkaConsumer<String, String> consumer, int records) {
-    ConsumerRecords<String, String> consumerRecords = consumer.poll(100L);
-    while (consumerRecords.count() < records) {
-      consumerRecords = consumer.poll(100L);
-      consumer.seekToBeginning(consumer.assignment());
+  private List<String> readRecords(KafkaConsumer<String, String> consumer, int records) {
+    List<String> result = new ArrayList<>(records);
+    while (result.size() < records) {
+      consumer.poll(100L).forEach(x -> result.add(x.value()));
     }
-    return consumerRecords;
+    return result;
   }
 
-  private KafkaConsumer<String, String> createKafkaConsumer(String topic) {
-    return createKafkaConsumer(kafkaCluster.bootstrapServers(), topic, UUID.randomUUID().toString());
-  }
-
-  private KafkaConsumer<String, String> createKafkaConsumer(
-      String bootstrapServers,
-      String topic,
-      String patchGroupId) {
+  private static KafkaConsumer<String, String> createPatchConsumer() {
     Properties properties = new Properties();
-    properties.setProperty("bootstrap.servers", bootstrapServers);
-    properties.setProperty("group.id", patchGroupId);
+    properties.setProperty("bootstrap.servers", kafkaCluster.bootstrapServers());
+    properties.setProperty("group.id", UUID.randomUUID().toString());
     properties.setProperty("auto.offset.reset", "earliest");
     properties.setProperty("enable.auto.commit", "false");
     KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(properties, new StringDeserializer(),
         new StringDeserializer());
-    kafkaConsumer.subscribe(Lists.newArrayList(topic));
+    kafkaConsumer.subscribe(Lists.newArrayList(patchTopic));
     return kafkaConsumer;
   }
 

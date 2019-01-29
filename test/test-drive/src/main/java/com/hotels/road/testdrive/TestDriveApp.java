@@ -28,10 +28,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
-import com.codahale.metrics.MetricRegistry;
 
 import com.hotels.road.model.core.Road;
 import com.hotels.road.offramp.api.Record;
@@ -59,8 +59,8 @@ public class TestDriveApp {
   }
 
   @Bean
-  MetricRegistry metricRegistry() {
-    return new MetricRegistry();
+  MeterRegistry meterRegistry() {
+    return new SimpleMeterRegistry();
   }
 
   @Bean

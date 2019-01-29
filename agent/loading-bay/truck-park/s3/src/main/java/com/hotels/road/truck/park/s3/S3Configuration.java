@@ -18,6 +18,7 @@ package com.hotels.road.truck.park.s3;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
@@ -31,6 +32,7 @@ import com.hotels.road.truck.park.spi.AbortableOutputStreamFactory;
 public class S3Configuration {
 
   @Bean
+  @Lazy
   AmazonS3 s3(
       @Value("${s3.endpoint.url}") String s3EndpointUrl,
       @Value("${s3.endpoint.signingRegion}") String signingRegion) {
