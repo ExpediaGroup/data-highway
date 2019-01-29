@@ -116,13 +116,13 @@ public class TruckParkAppIntegrationTest {
   static class TestConfig {
     @Primary
     @Bean
-    Clock clock() {
+    Clock testClock() {
       return Clock.fixed(LocalDate.of(2017, 4, 24).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
     }
 
     @Primary
     @Bean
-    AmazonS3 s3(@Value("${s3.port}") int port) {
+    AmazonS3 testS3(@Value("${s3.port}") int port) {
       return AmazonS3Client
           .builder()
           .withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))

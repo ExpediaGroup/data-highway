@@ -15,21 +15,16 @@
  */
 package com.hotels.road.weighbridge;
 
-import static io.prometheus.client.Collector.Type.GAUGE;
-
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Supplier;
 
 import org.springframework.stereotype.Component;
 
-import io.prometheus.client.Collector;
-import io.prometheus.client.Collector.MetricFamilySamples.Sample;
-import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import com.google.common.collect.ImmutableList;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.MultiGauge;
+import io.micrometer.core.instrument.MultiGauge.Row;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 
 import com.hotels.road.weighbridge.model.Broker;
 import com.hotels.road.weighbridge.model.LogDir;
@@ -37,57 +32,74 @@ import com.hotels.road.weighbridge.model.PartitionReplica;
 import com.hotels.road.weighbridge.model.Topic;
 
 @Component
-@RequiredArgsConstructor
-public class WeighBridgeMetrics extends Collector {
-  static final List<String> LOGDIR_LABELS = ImmutableList.of("broker", "logdir");
-  static final List<String> REPLICA_LABELS = ImmutableList.of("broker", "logdir", "topic", "partition", "leader",
-      "inSync");
+public class WeighBridgeMetrics {
+  private final MultiGauge diskFree;
+  private final MultiGauge diskTotal;
+  private final MultiGauge diskUsed;
+  private final MultiGauge sizeOnDisk;
+  private final MultiGauge logSize;
+  private final MultiGauge beginningOffset;
+  private final MultiGauge endOffset;
+  private final MultiGauge recordCount;
 
-  private final Supplier<Broker> supplier;
-
-  @Override
-  public List<MetricFamilySamples> collect() {
-    return Mono
-        .fromSupplier(supplier)
-        .flatMapMany(b -> Flux//
-            .fromIterable(b.getLogDirs())
-            .flatMap(ld -> logDir(b, ld)//
-                .mergeWith(Flux//
-                    .fromIterable(ld.getTopics())
-                    .flatMap(t -> Flux//
-                        .fromIterable(t.getPartitionReplicas())
-                        .flatMap(p -> partitionReplica(b, ld, t, p))))))
-        .collectList()
-        .map(samples -> new MetricFamilySamples("weighbridge", GAUGE, "weighbridge", samples))
-        .flux()
-        .collectList()
-        .block();
+  public WeighBridgeMetrics(MeterRegistry registry) {
+    diskFree = MultiGauge.builder("weighbridge_disk_free").register(registry);
+    diskTotal = MultiGauge.builder("weighbridge_disk_total").register(registry);
+    diskUsed = MultiGauge.builder("weighbridge_disk_used").register(registry);
+    sizeOnDisk = MultiGauge.builder("weighbridge_size_on_disk").register(registry);
+    logSize = MultiGauge.builder("weighbridge_log_size").register(registry);
+    beginningOffset = MultiGauge.builder("weighbridge_beginning_offset").register(registry);
+    endOffset = MultiGauge.builder("weighbridge_end_offset").register(registry);
+    recordCount = MultiGauge.builder("weighbridge_record_count").register(registry);
   }
 
-  Flux<Sample> logDir(Broker b, LogDir ld) {
-    List<String> labelValues = ImmutableList.of(String.valueOf(b.getId()), ld.getPath());
-    Sample free = sample("weighbridge_disk_free", LOGDIR_LABELS, labelValues, ld.getDiskFree());
-    Sample total = sample("weighbridge_disk_total", LOGDIR_LABELS, labelValues, ld.getDiskTotal());
-    Sample used = sample("weighbridge_disk_used", LOGDIR_LABELS, labelValues, ld.getDiskTotal() - ld.getDiskFree());
-    return Flux.just(free, total, used);
-  }
+  @SuppressWarnings("rawtypes")
+  public void update(Broker broker) {
+    List<Row> diskFreeRows = new ArrayList<>();
+    List<Row> diskTotalRows = new ArrayList<>();
+    List<Row> diskUsedRows = new ArrayList<>();
+    List<Row> sizeOnDiskRows = new ArrayList<>();
+    List<Row> logSizeRows = new ArrayList<>();
+    List<Row> beginningOffsetRows = new ArrayList<>();
+    List<Row> endOffsetRows = new ArrayList<>();
+    List<Row> recordCountRows = new ArrayList<>();
 
-  Flux<Sample> partitionReplica(Broker b, LogDir ld, Topic t, PartitionReplica p) {
-    List<String> labelValues = Flux
-        .just(b.getId(), ld.getPath(), t.getName(), p.getPartition(), p.isLeader(), p.isInSync())
-        .map(Objects::toString)
-        .collectList()
-        .block();
+    Tag brokerTag = Tag.of("broker", String.valueOf(broker.getId()));
+    Tag rackTag = Tag.of("rack", broker.getRack());
 
-    Sample sizeOnDisk = sample("weighbridge_size_on_disk", REPLICA_LABELS, labelValues, p.getSizeOnDisk());
-    Sample logSize = sample("weighbridge_log_size", REPLICA_LABELS, labelValues, p.getLogSize());
-    Sample beginning = sample("weighbridge_beginning_offset", REPLICA_LABELS, labelValues, p.getBeginningOffset());
-    Sample end = sample("weighbridge_end_offset", REPLICA_LABELS, labelValues, p.getEndOffset());
-    Sample count = sample("weighbridge_record_count", REPLICA_LABELS, labelValues, p.getRecordCount());
-    return Flux.just(sizeOnDisk, logSize, beginning, end, count);
-  }
+    for (LogDir logDir : broker.getLogDirs()) {
+      Tag logDirTag = Tag.of("logdir", logDir.getPath());
 
-  private Sample sample(String name, List<String> labelNames, List<String> labelValues, Long value) {
-    return new Sample(name, labelNames, labelValues, value.doubleValue());
+      Tags logDirTags = Tags.of(brokerTag, rackTag, logDirTag);
+      diskFreeRows.add(Row.of(logDirTags, logDir.getDiskFree()));
+      diskTotalRows.add(Row.of(logDirTags, logDir.getDiskTotal()));
+      diskUsedRows.add(Row.of(logDirTags, logDir.getDiskTotal() - logDir.getDiskFree()));
+
+      for (Topic topic : logDir.getTopics()) {
+        Tag topicTag = Tag.of("topic", topic.getName());
+
+        for (PartitionReplica replica : topic.getPartitionReplicas()) {
+          Tag partitionTag = Tag.of("partition", String.valueOf(replica.getPartition()));
+          Tag leaderTag = Tag.of("leader", String.valueOf(replica.isLeader()));
+          Tag inSyncTag = Tag.of("inSync", String.valueOf(replica.isInSync()));
+
+          Tags replicaTags = Tags.of(brokerTag, rackTag, logDirTag, topicTag, partitionTag, leaderTag, inSyncTag);
+          sizeOnDiskRows.add(Row.of(replicaTags, replica.getSizeOnDisk()));
+          logSizeRows.add(Row.of(replicaTags, replica.getLogSize()));
+          beginningOffsetRows.add(Row.of(replicaTags, replica.getBeginningOffset()));
+          endOffsetRows.add(Row.of(replicaTags, replica.getEndOffset()));
+          recordCountRows.add(Row.of(replicaTags, replica.getRecordCount()));
+        }
+      }
+    }
+
+    diskFree.register(diskFreeRows, true);
+    diskTotal.register(diskTotalRows, true);
+    diskUsed.register(diskUsedRows, true);
+    sizeOnDisk.register(sizeOnDiskRows, true);
+    logSize.register(logSizeRows, true);
+    beginningOffset.register(beginningOffsetRows, true);
+    endOffset.register(endOffsetRows, true);
+    recordCount.register(recordCountRows, true);
   }
 }

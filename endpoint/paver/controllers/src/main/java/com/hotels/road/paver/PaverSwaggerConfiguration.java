@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -42,7 +43,8 @@ public class PaverSwaggerConfiguration {
   private static final String BASIC_AUTH = "basicAuth";
 
   @Bean
-  SecurityConfiguration security() {
+  @Lazy
+  SecurityConfiguration paverSecurity() {
     return SecurityConfigurationBuilder
         .builder()
         .realm("Data Highway")
