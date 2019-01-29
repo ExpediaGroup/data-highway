@@ -40,7 +40,7 @@ public class MessagesMetricSet {
   public MessagesMetricSet(MeterRegistry registry) {
     receiverErrors = Counter.builder("highwaypatrol-receiverErrors").register(registry);
     transitTime = Timer.builder("highwaypatrol-transitTime").maximumExpectedValue(Duration.ofMinutes(10L)).publishPercentileHistogram().register(registry);
-    onrampTime = Timer.builder("highwaypatrol-onrampTime").publishPercentileHistogram().register(registry);
+    onrampTime = Timer.builder("highwaypatrol-onrampTime").maximumExpectedValue(Duration.ofMinutes(10L)).publishPercentileHistogram().register(registry);
     messagesCounted = Counter.builder("highwaypatrol-messagesCounted").register(registry);
 
     messageEndStateReservoirs = new EnumMap<>(MessageState.class);
