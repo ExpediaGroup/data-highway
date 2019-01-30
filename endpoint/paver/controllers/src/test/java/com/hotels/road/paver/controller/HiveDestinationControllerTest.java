@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -255,5 +256,44 @@ public class HiveDestinationControllerTest {
         .andExpect(jsonPath("$.timestamp", isA(Long.TYPE)))
         .andExpect(jsonPath("$.success", is(false)))
         .andExpect(jsonPath("$.message", is("Hive destination for Road \"road1\" does not exist.")));
+  }
+
+  @Test
+  public void delete_UnknownRoad() throws Exception {
+    doThrow(new UnknownRoadException(NAME)).when(service).deleteHiveDestination(NAME);
+
+    mockMvc
+        .perform(delete(HIVE_DESTINATION_ENDPOINT).contentType(APPLICATION_JSON_UTF8).content(DESTINATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+        .andExpect(jsonPath("$.timestamp", isA(Long.TYPE)))
+        .andExpect(jsonPath("$.success", is(false)))
+        .andExpect(jsonPath("$.message", is("Road \"road1\" does not exist.")));
+  }
+
+  @Test
+  public void delete_UnknownDestination() throws Exception {
+    doThrow(new UnknownDestinationException("Hive", NAME)).when(service).deleteHiveDestination(NAME);
+
+    mockMvc
+        .perform(delete(HIVE_DESTINATION_ENDPOINT).contentType(APPLICATION_JSON_UTF8).content(DESTINATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+        .andExpect(jsonPath("$.timestamp", isA(Long.TYPE)))
+        .andExpect(jsonPath("$.success", is(false)))
+        .andExpect(jsonPath("$.message", is("Hive destination for Road \"road1\" does not exist.")));
+  }
+
+  @Test
+  public void delete_Ok() throws Exception {
+    mockMvc
+        .perform(delete(HIVE_DESTINATION_ENDPOINT).contentType(APPLICATION_JSON_UTF8).content(DESTINATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+        .andExpect(jsonPath("$.timestamp", isA(Long.TYPE)))
+        .andExpect(jsonPath("$.success", is(true)))
+        .andExpect(jsonPath("$.message", is("Request to delete Hive destination for \"road1\" received.")));
+
+    verify(service).deleteHiveDestination(NAME);
   }
 }

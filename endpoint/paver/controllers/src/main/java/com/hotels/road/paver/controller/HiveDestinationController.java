@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,12 +32,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import lombok.RequiredArgsConstructor;
-
 import com.hotels.road.exception.AlreadyExistsException;
 import com.hotels.road.exception.UnknownDestinationException;
 import com.hotels.road.exception.UnknownRoadException;
@@ -44,6 +39,12 @@ import com.hotels.road.paver.service.HiveDestinationService;
 import com.hotels.road.paver.service.exception.InvalidLandingIntervalException;
 import com.hotels.road.rest.model.HiveDestinationModel;
 import com.hotels.road.rest.model.StandardResponse;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import lombok.RequiredArgsConstructor;
 
 @Api(tags = "hive")
 @RestController
@@ -86,6 +87,19 @@ public class HiveDestinationController {
     hiveDestinationService.updateHiveDestination(name, hiveDestinationModel);
     return StandardResponse
         .successResponse(String.format("Request to update Hive destination for \"%s\" received.", name));
+  }
+
+  @ApiOperation(value = "Deletes an existing Hive destination")
+  @ApiResponses({
+      @ApiResponse(code = 200, message = "Deletion of existing Hive destination requested.", response = StandardResponse.class),
+      @ApiResponse(code = 404, message = "Road or Hive destination not found.", response = StandardResponse.class) })
+  @PreAuthorize("@paverAuthorisation.isAuthorised(authentication)")
+  @DeleteMapping
+  public StandardResponse delete(@PathVariable String name)
+      throws UnknownRoadException, UnknownDestinationException {
+    hiveDestinationService.deleteHiveDestination(name);
+    return StandardResponse
+        .successResponse(String.format("Request to delete Hive destination for \"%s\" received.", name));
   }
 
   @ExceptionHandler(UnknownRoadException.class)
