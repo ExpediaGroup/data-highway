@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -73,6 +74,7 @@ public class OnrampController {
   @PostMapping(path = "/roads/{roadName}/messages")
   public Iterable<StandardResponse> produce(@PathVariable String roadName, @RequestBody ArrayNode json)
     throws UnknownRoadException, InterruptedException {
+    DistributionSummary.builder("onramp.request").tag("road", roadName).register(registry).record(json.size());
     Onramp onramp = service.getOnramp(roadName).orElseThrow(() -> new UnknownRoadException(roadName));
     if (!onramp.isAvailable()) {
       throw new RoadUnavailableException(String.format("Road '%s' is disabled, could not send events.", roadName));
