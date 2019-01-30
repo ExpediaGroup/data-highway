@@ -7,6 +7,6 @@ cache:
   directories:
   - ~/.m2/repository
 install:
-- mvn -q install -DskipTests -Djib.skip
+- mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Djib.skip -q
 script:
-- mvn -q test -Djib.skip
+- mvn test -B -Djib.skip -q
