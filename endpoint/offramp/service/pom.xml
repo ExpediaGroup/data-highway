@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels.road</groupId>
     <artifactId>road-offramp</artifactId>
-    <version>6.0.3-SNAPSHOT</version>
+    <version>6.0.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>road-offramp-service</artifactId>
@@ -46,8 +46,8 @@
       <artifactId>jackson-datatype-jsr310</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

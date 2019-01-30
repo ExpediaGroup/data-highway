@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels.road</groupId>
     <artifactId>road-loading-bay</artifactId>
-    <version>6.0.3-SNAPSHOT</version>
+    <version>6.0.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>road-loading-bay-app</artifactId>
@@ -24,12 +24,6 @@
       <groupId>com.hotels.road</groupId>
       <artifactId>road-hive-metastore-core</artifactId>
       <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>io.dropwizard.metrics</groupId>
-          <artifactId>metrics-core</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.hotels.road</groupId>
@@ -59,6 +53,11 @@
     <dependency>
       <groupId>com.hotels.road</groupId>
       <artifactId>road-traffic-cop</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.hotels.road</groupId>
+      <artifactId>road-s3-common</artifactId>
       <version>${project.version}</version>
     </dependency>
 

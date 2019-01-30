@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.road.kafka.healthcheck;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+package com.hotels.road.multiframe;
 
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.Test;
+import static java.lang.String.join;
+import static java.util.Collections.nCopies;
 
-public class KafkaConsumerFactoryTest {
+import com.hotels.road.offramp.model.Message;
 
-  @Test
-  public void create() {
-    KafkaConsumerFactory underTest = new KafkaConsumerFactory("localhost:9092");
-    Consumer<String, String> consumer = underTest.create("testing");
-    assertThat(consumer, is(instanceOf(KafkaConsumer.class)));
+import lombok.Getter;
+
+public class TestMessage {
+
+  @Getter
+  private static String payload = join("", nCopies(1024, "x"));
+
+  public static Message<String> getTestMessage()
+  {
+    return new Message<>(0, 1L, 2, 3L, payload);
   }
+
 }

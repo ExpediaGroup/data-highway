@@ -15,7 +15,7 @@
  */
 package com.hotels.road.weighbridge;
 
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,10 +27,10 @@ import com.hotels.road.weighbridge.model.Broker;
 @RestController
 @RequiredArgsConstructor
 public class WeighBridgeController {
-  private final Supplier<Broker> supplier;
+  private final AtomicReference<Broker> brokerReference;
 
   @GetMapping("/broker")
   public Broker get() {
-    return supplier.get();
+    return brokerReference.get();
   }
 }

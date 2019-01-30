@@ -16,7 +16,6 @@
 package com.hotels.road.kafka.offset.metrics;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -28,13 +27,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import kafka.admin.AdminClient;
 
-import com.codahale.metrics.Clock;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.ScheduledReporter;
-import com.codahale.metrics.graphite.Graphite;
-import com.codahale.metrics.graphite.GraphiteReporter;
-import com.google.common.net.HostAndPort;
-
 import com.hotels.road.boot.DataHighwayApplication;
 
 @SpringBootApplication
@@ -45,26 +37,6 @@ public class KafkaOffsetMetricsApp {
     Properties properties = new Properties();
     properties.setProperty("bootstrap.servers", bootstrapServers);
     return AdminClient.create(properties);
-  }
-
-  @Bean
-  ScheduledReporter reporter(
-      @Value("${graphite.endpoint}") String graphiteEndpoint,
-      @Value("${graphite.prefix:road}") String graphitePrefix,
-      Clock clock,
-      Supplier<String> hostnameSupplier) {
-    HostAndPort hostAndPort = HostAndPort.fromString(graphiteEndpoint);
-    InetSocketAddress socketAddress = new InetSocketAddress(hostAndPort.getHost(), hostAndPort.getPort());
-    return GraphiteReporter
-        .forRegistry(new MetricRegistry())
-        .prefixedWith(MetricRegistry.name(graphitePrefix, "kafka-offset", "host", hostnameSupplier.get()))
-        .withClock(clock)
-        .build(new Graphite(socketAddress));
-  }
-
-  @Bean
-  Clock clock() {
-    return Clock.defaultClock();
   }
 
   @Bean
