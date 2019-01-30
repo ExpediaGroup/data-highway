@@ -40,6 +40,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import reactor.core.publisher.Mono;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 
@@ -48,8 +52,6 @@ import com.hotels.road.offramp.client.OfframpOptions;
 import com.hotels.road.offramp.model.Message;
 import com.hotels.road.security.RoadWebSecurityConfigurerAdapter;
 import com.hotels.road.tls.TLSConfig;
-
-import reactor.core.publisher.Mono;
 
 public class MultiFrameIntegrationTest {
 
@@ -78,7 +80,8 @@ public class MultiFrameIntegrationTest {
         .map(e -> String.format("--%s=%s", e.getKey(), e.getValue()))
         .toArray(String[]::new);
 
-    context = new SpringApplicationBuilder(WebSocketHandlerTest.class, TestSecurityConf.class).bannerMode(OFF).run(args);
+    context = new SpringApplicationBuilder(WebSocketHandlerTest.class, TestSecurityConf.class).bannerMode(OFF).run(
+        args);
   }
 
   @Configuration
@@ -99,11 +102,15 @@ public class MultiFrameIntegrationTest {
         }
       };
     }
+
+    @Bean
+    MeterRegistry simpleMeterregistry() {
+      return new SimpleMeterRegistry();
+    }
   }
 
   /**
-   * Test OffRamp Service reception when data is sent over multiples
-   * frames through websocket
+   * Test OffRamp Service reception when data is sent over multiples frames through websocket
    */
   @Test
   public void testClient() throws Exception {
