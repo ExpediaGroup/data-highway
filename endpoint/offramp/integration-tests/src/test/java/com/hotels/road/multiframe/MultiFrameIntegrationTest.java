@@ -27,6 +27,7 @@ import java.net.ServerSocket;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.boot.actuate.autoconfigure.metrics.KafkaMetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
@@ -40,8 +41,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import reactor.core.publisher.Mono;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -89,7 +88,8 @@ public class MultiFrameIntegrationTest {
   @SpringBootApplication(exclude = {
       SessionAutoConfiguration.class,
       RedisAutoConfiguration.class,
-      RedisRepositoriesAutoConfiguration.class })
+      RedisRepositoriesAutoConfiguration.class,
+      KafkaMetricsAutoConfiguration.class })
   public static class TestSecurityConf {
     @Bean
     public WebSecurityConfigurerAdapter webSecurityConfigurerAdapter() {
@@ -101,11 +101,6 @@ public class MultiFrameIntegrationTest {
               User.withDefaultPasswordEncoder().username("user").password("pass").authorities("ROLE_USER"));
         }
       };
-    }
-
-    @Bean
-    MeterRegistry simpleMeterregistry() {
-      return new SimpleMeterRegistry();
     }
   }
 
