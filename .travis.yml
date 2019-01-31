@@ -7,6 +7,6 @@ cache:
   directories:
   - ~/.m2/repository
 install:
-- mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Djib.skip -q
+- mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Djib.skip -q -Ptravis
 script:
 - mvn test -B -Djib.skip -q coveralls:report -Ptravis -DrepoToken=${COVERALLS_REPO_TOKEN}
