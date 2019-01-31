@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- New CLI Offramp client tool
 ### Changed
 - Increased highway patrol onrampTime metric window from 30 seconds to 10 minutes.
 

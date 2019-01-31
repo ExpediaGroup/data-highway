@@ -101,6 +101,7 @@
     <module>monitoring/weigh-bridge</module>
     <module>test/endpoints-tests</module>
     <module>test/test-drive</module>
+    <module>tool/cli</module>
   </modules>
 
   <dependencyManagement>
