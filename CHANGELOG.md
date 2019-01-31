@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - New CLI Offramp client tool
-
-## [6.0.3] - 2019-01-29
 ### Changed
 - Increased highway patrol onrampTime metric window from 30 seconds to 10 minutes.
 
