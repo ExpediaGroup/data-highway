@@ -27,6 +27,7 @@ import java.net.ServerSocket;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.boot.actuate.autoconfigure.metrics.KafkaMetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
@@ -40,6 +41,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
 
+import reactor.core.publisher.Mono;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 
@@ -48,8 +51,6 @@ import com.hotels.road.offramp.client.OfframpOptions;
 import com.hotels.road.offramp.model.Message;
 import com.hotels.road.security.RoadWebSecurityConfigurerAdapter;
 import com.hotels.road.tls.TLSConfig;
-
-import reactor.core.publisher.Mono;
 
 public class MultiFrameIntegrationTest {
 
@@ -78,7 +79,8 @@ public class MultiFrameIntegrationTest {
         .map(e -> String.format("--%s=%s", e.getKey(), e.getValue()))
         .toArray(String[]::new);
 
-    context = new SpringApplicationBuilder(WebSocketHandlerTest.class, TestSecurityConf.class).bannerMode(OFF).run(args);
+    context = new SpringApplicationBuilder(WebSocketHandlerTest.class, TestSecurityConf.class).bannerMode(OFF).run(
+        args);
   }
 
   @Configuration
@@ -86,7 +88,8 @@ public class MultiFrameIntegrationTest {
   @SpringBootApplication(exclude = {
       SessionAutoConfiguration.class,
       RedisAutoConfiguration.class,
-      RedisRepositoriesAutoConfiguration.class })
+      RedisRepositoriesAutoConfiguration.class,
+      KafkaMetricsAutoConfiguration.class })
   public static class TestSecurityConf {
     @Bean
     public WebSecurityConfigurerAdapter webSecurityConfigurerAdapter() {
@@ -102,8 +105,7 @@ public class MultiFrameIntegrationTest {
   }
 
   /**
-   * Test OffRamp Service reception when data is sent over multiples
-   * frames through websocket
+   * Test OffRamp Service reception when data is sent over multiples frames through websocket
    */
   @Test
   public void testClient() throws Exception {

@@ -69,6 +69,7 @@ import com.hotels.road.offramp.model.Commit;
 import com.hotels.road.offramp.model.CommitResponse;
 import com.hotels.road.offramp.model.Connection;
 import com.hotels.road.offramp.model.Event;
+import com.hotels.road.offramp.model.Error;
 import com.hotels.road.offramp.model.Message;
 import com.hotels.road.offramp.model.Rebalance;
 import com.hotels.road.offramp.model.Request;
@@ -150,6 +151,20 @@ public class OfframpServiceV2Test {
   public void handleIncomingRequest() throws Exception {
     underTest.handleIncomingEvent(new Request(10L));
     assertThat(underTest.getRequested(), is(10L));
+  }
+
+  @Test
+  public void handleIncomingRequestCountZero() throws Exception {
+    underTest.handleIncomingEvent(new Request(0L));
+    assertThat(underTest.getRequested(), is(0L));
+  }
+
+  @Test
+  public void handleIncomingRequestCountNegative() throws Exception {
+    underTest.handleIncomingEvent(new Request(-1000L));
+    assertThat(underTest.getRequested(), is(0L));
+    Exception ex = new IllegalArgumentException("Requested count cannot be negative value (given -1000)");
+    verify(underTest).sendEvent(new Error(ex.getMessage()));
   }
 
   @Test
@@ -240,6 +255,17 @@ public class OfframpServiceV2Test {
     underTest.sendRebalance(assignment);
 
     verify(underTest).sendEvent(new Rebalance(assignment));
+  }
+
+  @Test
+  public void sendError() throws Exception {
+    Exception exception = new IndexOutOfBoundsException("The reason is what it is!");
+
+    doNothing().when(underTest).sendEvent(any());
+
+    underTest.sendError(exception);
+
+    verify(underTest).sendEvent(new Error("The reason is what it is!"));
   }
 
   @Test

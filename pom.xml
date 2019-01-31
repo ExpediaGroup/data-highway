@@ -9,7 +9,7 @@
 
   <groupId>com.hotels.road</groupId>
   <artifactId>road-parent</artifactId>
-  <version>6.0.4-SNAPSHOT</version>
+  <version>6.0.5-SNAPSHOT</version>
   <packaging>pom</packaging>
   <inceptionYear>2016</inceptionYear>
   <description>
@@ -101,6 +101,7 @@
     <module>monitoring/weigh-bridge</module>
     <module>test/endpoints-tests</module>
     <module>test/test-drive</module>
+    <module>tool/cli</module>
   </modules>
 
   <dependencyManagement>
