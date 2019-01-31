@@ -9,4 +9,4 @@ cache:
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Djib.skip -q -Ptravis
 script:
-- mvn test -B -Djib.skip -q coveralls:report -Ptravis -DrepoToken=${COVERALLS_REPO_TOKEN}
+- mvn test -B -Djib.skip -q cobertura:cobertura coveralls:report -Ptravis -DrepoToken=${COVERALLS_REPO_TOKEN}
