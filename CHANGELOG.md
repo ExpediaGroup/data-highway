@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [6.0.3] - 2019-01-29
+## [Unreleased]
+### Added
+- New CLI Offramp client tool
 ### Changed
 - Increased highway patrol onrampTime metric window from 30 seconds to 10 minutes.
 
