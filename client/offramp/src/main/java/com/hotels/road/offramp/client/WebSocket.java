@@ -138,8 +138,10 @@ class WebSocket implements AutoCloseable {
     connect();
     log.debug("Sending Event: {}", event);
     synchronized (session) {
-      try (OutputStream out = session.getBasicRemote().getSendStream()) {
-        out.write(mapper.writeValueAsBytes(event));
+      try {
+        session
+            .getBasicRemote()
+            .sendBinary(ByteBuffer.wrap(mapper.writeValueAsBytes(event)));
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }

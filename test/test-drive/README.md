@@ -23,7 +23,7 @@ When `test-drive` is running, the Swagger documentation for all endpoints will b
 ### Docker
 
 ```
-    docker run -p 8080:8080 ${repository}/road/test-drive:latest
+docker run -p 8080:8080 ${repository}/road/test-drive:latest
 ```
 
 ### In a unit test
@@ -49,3 +49,16 @@ When `test-drive` is running, the Swagger documentation for all endpoints will b
       }
     }
 ```
+
+### TLS Configuration
+
+`test-drive` exposes an HTTPS port using the following certificate: [server.crt](src/main/resources/server.crt).
+
+In order to consume the HTTPS services, you can trust this certificate or directly import the corresponding [truststore](src/main/resources/truststore.jks).
+
+This certificate is configured on two different DNS names:
+* `localhost`
+* `test-drive`
+
+The latter allows a developer to consume the HTTPS services if the project is deployed remotely without having to configure a custom hostname verifier.
+In this case, you can simply add a DNS entry to map `test-drive` to the remote endpoint.
