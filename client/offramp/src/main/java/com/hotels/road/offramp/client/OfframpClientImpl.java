@@ -35,6 +35,7 @@ import reactor.retry.Retry;
 import com.hotels.road.offramp.model.CommitResponse;
 import com.hotels.road.offramp.model.Connection;
 import com.hotels.road.offramp.model.Event;
+import com.hotels.road.offramp.model.Error;
 import com.hotels.road.offramp.model.Message;
 import com.hotels.road.offramp.model.Rebalance;
 
@@ -96,6 +97,8 @@ class OfframpClientImpl<T> implements OfframpClient<T> {
       rebalances.onNext((Rebalance) event);
     } else if (event instanceof Connection) {
       log.info("Connected to agent {}", ((Connection) event).getAgentName());
+    } else if (event instanceof Error) {
+      log.error(((Error) event).getReason());
     } else {
       log.warn("Unknown message type: {}", event);
     }
