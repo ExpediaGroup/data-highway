@@ -16,6 +16,7 @@
 package com.hotels.road.paver.tollbooth;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
@@ -166,4 +167,26 @@ public class TollBoothHiveDestinationAdminClientTest {
     underTest.updateHiveDestination(NAME, hiveDestination);
   }
 
+  @Test
+  public void deleteHiveDestination() throws Exception {
+    destinations.put("hive", hiveDestination);
+    road.setDestinations(destinations);
+    store.put(NAME, road);
+
+    underTest.deleteHiveDestination(NAME);
+
+    assertNull(store.get(NAME).getDestinations().get("hive"));
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void deleteHiveDestination_UnknownRoad() throws Exception {
+    underTest.deleteHiveDestination(NAME);
+  }
+
+  @Test(expected = UnknownDestinationException.class)
+  public void deleteHiveDestination_UnknownDestination() throws Exception {
+    store.put(NAME, road);
+
+    underTest.deleteHiveDestination(NAME);
+  }
 }

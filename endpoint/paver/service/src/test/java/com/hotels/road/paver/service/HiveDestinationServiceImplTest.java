@@ -187,4 +187,22 @@ public class HiveDestinationServiceImplTest {
   public void intervalTooLong() throws Exception {
     underTest.validateAndNormaliseLandingInterval("P7D");
   }
+
+  @Test
+  public void deleteHiveDestination() throws Exception {
+    underTest.deleteHiveDestination(NAME);
+    verify(hiveDestinationAdminClient).deleteHiveDestination(NAME);
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void deleteHiveDestination_UnknownRoad() throws Exception {
+    doThrow(UnknownRoadException.class).when(hiveDestinationAdminClient).deleteHiveDestination(NAME);
+    underTest.deleteHiveDestination(NAME);
+  }
+
+  @Test(expected = UnknownDestinationException.class)
+  public void deleteHiveDestination_UnknownDestination() throws Exception {
+    doThrow(UnknownDestinationException.class).when(hiveDestinationAdminClient).deleteHiveDestination(NAME);
+    underTest.deleteHiveDestination(NAME);
+  }
 }

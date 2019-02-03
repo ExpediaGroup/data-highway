@@ -30,4 +30,7 @@ public interface HiveDestinationAdminClient {
 
   void updateHiveDestination(String name, HiveDestination hiveDestination)
     throws UnknownRoadException, UnknownDestinationException;
+
+  void deleteHiveDestination(String name)
+    throws UnknownRoadException, UnknownDestinationException;
 }

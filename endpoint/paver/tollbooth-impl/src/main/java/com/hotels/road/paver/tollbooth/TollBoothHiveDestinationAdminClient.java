@@ -78,6 +78,17 @@ public class TollBoothHiveDestinationAdminClient implements HiveDestinationAdmin
   }
 
   @Override
+  public void deleteHiveDestination(String name)
+      throws UnknownRoadException, UnknownDestinationException {
+    getHiveDestination(name).orElseThrow(() -> new UnknownDestinationException("Hive", name));
+
+    List<PatchOperation> operations = new ArrayList<>();
+    operations.add(PatchOperation.remove(DESTINATIONS_HIVE));
+    PatchSet patchSet = new PatchSet(name, operations);
+    modificationEmitter.emit(patchSet);
+  }
+
+  @Override
   public void updateHiveDestination(String name, HiveDestination hiveDestination)
     throws UnknownRoadException, UnknownDestinationException {
     getHiveDestination(name).orElseThrow(() -> new UnknownDestinationException("Hive", name));

@@ -28,4 +28,7 @@ public interface HiveDestinationService {
 
   void updateHiveDestination(String name, HiveDestinationModel hiveDestinationModel)
     throws UnknownRoadException, UnknownDestinationException;
+
+  void deleteHiveDestination(String name)
+    throws UnknownRoadException, UnknownDestinationException;;
 }

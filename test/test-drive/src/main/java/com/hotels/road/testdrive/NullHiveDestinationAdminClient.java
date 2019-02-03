@@ -39,4 +39,8 @@ class NullHiveDestinationAdminClient implements HiveDestinationAdminClient {
   @Override
   public void updateHiveDestination(String name, HiveDestination hiveDestination)
     throws UnknownRoadException, UnknownDestinationException {}
+
+  @Override
+  public void deleteHiveDestination(String name)
+    throws UnknownRoadException, UnknownDestinationException {}
 }

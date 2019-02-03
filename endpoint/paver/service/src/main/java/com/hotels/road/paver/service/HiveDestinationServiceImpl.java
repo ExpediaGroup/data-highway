@@ -77,6 +77,12 @@ public class HiveDestinationServiceImpl implements HiveDestinationService {
     hiveDestinationAdminClient.updateHiveDestination(name, hiveDestination);
   }
 
+  @Override
+  public void deleteHiveDestination(String name)
+    throws UnknownRoadException, UnknownDestinationException {
+    hiveDestinationAdminClient.deleteHiveDestination(name);
+  }
+
   @VisibleForTesting
   String validateAndNormaliseLandingInterval(String landingInterval) {
     return Optional

@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -86,6 +87,19 @@ public class HiveDestinationController {
     hiveDestinationService.updateHiveDestination(name, hiveDestinationModel);
     return StandardResponse
         .successResponse(String.format("Request to update Hive destination for \"%s\" received.", name));
+  }
+
+  @ApiOperation(value = "Deletes an existing Hive destination")
+  @ApiResponses({
+      @ApiResponse(code = 200, message = "Deletion of existing Hive destination requested.", response = StandardResponse.class),
+      @ApiResponse(code = 404, message = "Road or Hive destination not found.", response = StandardResponse.class) })
+  @PreAuthorize("@paverAuthorisation.isAuthorised(authentication)")
+  @DeleteMapping
+  public StandardResponse delete(@PathVariable String name)
+      throws UnknownRoadException, UnknownDestinationException {
+    hiveDestinationService.deleteHiveDestination(name);
+    return StandardResponse
+        .successResponse(String.format("Request to delete Hive destination for \"%s\" received.", name));
   }
 
   @ExceptionHandler(UnknownRoadException.class)
