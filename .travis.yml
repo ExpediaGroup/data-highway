@@ -6,6 +6,8 @@ os:
 cache:
   directories:
   - ~/.m2/repository
+env:
+- MAVEN_OPTS=-Dorg.slf4j.simpleLogger.log.org.codehaus.mojo.cobertura.CoberturaReportMojo=off
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Djib.skip -q -Ptravis
 script:
