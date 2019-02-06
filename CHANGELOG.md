@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- Onramp: Messages per request metric.
 - New CLI Offramp client tool
 ### Changed
 - Increased highway patrol onrampTime metric window from 30 seconds to 10 minutes.
