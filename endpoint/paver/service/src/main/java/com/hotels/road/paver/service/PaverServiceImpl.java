@@ -40,6 +40,7 @@ import com.hotels.road.exception.InvalidKeyPathException;
 import com.hotels.road.exception.InvalidSchemaVersionException;
 import com.hotels.road.exception.ServiceException;
 import com.hotels.road.exception.UnknownRoadException;
+import com.hotels.road.model.core.Destination;
 import com.hotels.road.model.core.HiveDestination;
 import com.hotels.road.model.core.KafkaStatus;
 import com.hotels.road.model.core.Road;
@@ -244,6 +245,24 @@ public class PaverServiceImpl implements PaverService {
   public void deleteSchemaVersion(String name, int version) throws UnknownRoadException {
     schemaStoreClient.deleteSchemaVersion(name, version);
     roadSchemaNotificationHandler.handleSchemaDeleted(name, version);
+  }
+
+  private boolean zeroActiveDestination(Map<String, Destination> destinations)
+  {
+    return destinations == null || destinations.isEmpty();
+  }
+
+  @Override
+  public void deleteRoad(String name) throws UnknownRoadException {
+    Road road = getRoadOrThrow(name);
+    if(road.isEnabled() && zeroActiveDestination(road.getDestinations()) )
+    {
+
+    }
+    else
+    {
+      //throw new
+    }
   }
 
 }
