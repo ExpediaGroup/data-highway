@@ -19,9 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisSentinelConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.ldap.core.support.BaseLdapPathContextSource;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -33,7 +30,9 @@ import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.session.hazelcast.HazelcastSessionRepository;
+import org.springframework.session.hazelcast.PrincipalNameExtractor;
+import org.springframework.session.hazelcast.config.annotation.web.http.EnableHazelcastHttpSession;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,19 +41,36 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import avro.shaded.com.google.common.collect.ImmutableList;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.MapAttributeConfig;
+import com.hazelcast.config.MapIndexConfig;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+
 @Profile("ldap")
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@EnableRedisHttpSession
+@EnableHazelcastHttpSession
 public class LdapSecurityConfiguration {
   @Bean
-  public RedisConnectionFactory redisConnectionFactory(
-      @Value("${redis.master}") String redisMaster,
-      @Value("${redis.sentinelHost}") String redisSentinelHost,
-      @Value("${redis.sentinelPort}") int redisSentinelPort) {
-    RedisSentinelConfiguration sentinelConfig = new RedisSentinelConfiguration().master(redisMaster).sentinel(
-        redisSentinelHost, redisSentinelPort);
-    return new LettuceConnectionFactory(sentinelConfig);
+  public HazelcastInstance hazelcastInstance(@Value("${hazelcast.service-dns-name}") String hazelcastServiceDnsName) {
+    MapAttributeConfig attributeConfig = new MapAttributeConfig()
+        .setName(HazelcastSessionRepository.PRINCIPAL_NAME_ATTRIBUTE)
+        .setExtractor(PrincipalNameExtractor.class.getName());
+
+    Config config = new Config();
+
+    config
+        .getMapConfig(HazelcastSessionRepository.DEFAULT_SESSION_MAP_NAME)
+        .addMapAttributeConfig(attributeConfig)
+        .addMapIndexConfig(new MapIndexConfig(HazelcastSessionRepository.PRINCIPAL_NAME_ATTRIBUTE, false));
+
+    JoinConfig joinConfig = config.getNetworkConfig().getJoin();
+    joinConfig.getMulticastConfig().setEnabled(false);
+    joinConfig.getKubernetesConfig().setEnabled(true).setProperty("service-dns", hazelcastServiceDnsName);
+
+    return Hazelcast.newHazelcastInstance(config);
   }
 
   @Bean
@@ -92,7 +108,8 @@ public class LdapSecurityConfiguration {
       @Value("${ldap.group.searchSubtree}") boolean searchSubtree,
       @Value("${ldap.group.ignorePartialResultException}") boolean ignorePartialResultException,
       @Value("${ldap.group.searchFilter}") String groupSearchFilter) {
-    DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(contextSource,
+    DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(
+        contextSource,
         groupSearchBase);
     authoritiesPopulator.setSearchSubtree(searchSubtree);
     authoritiesPopulator.setIgnorePartialResultException(ignorePartialResultException);
@@ -138,8 +155,7 @@ public class LdapSecurityConfiguration {
   }
 
   @Bean
-  public WebSecurityConfigurerAdapter webSecurityConfigurerAdapter(
-      LdapAuthenticationProvider authenticationProvider) {
+  public WebSecurityConfigurerAdapter webSecurityConfigurerAdapter(LdapAuthenticationProvider authenticationProvider) {
     return new RoadWebSecurityConfigurerAdapter() {
       @Override
       public void configure(AuthenticationManagerBuilder auth) throws Exception {
