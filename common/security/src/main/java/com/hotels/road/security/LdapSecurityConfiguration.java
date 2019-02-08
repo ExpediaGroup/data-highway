@@ -30,8 +30,6 @@ import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
-import org.springframework.session.hazelcast.HazelcastSessionRepository;
-import org.springframework.session.hazelcast.PrincipalNameExtractor;
 import org.springframework.session.hazelcast.config.annotation.web.http.EnableHazelcastHttpSession;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -41,38 +39,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import avro.shaded.com.google.common.collect.ImmutableList;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.JoinConfig;
-import com.hazelcast.config.MapAttributeConfig;
-import com.hazelcast.config.MapIndexConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-
 @Profile("ldap")
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableHazelcastHttpSession
 public class LdapSecurityConfiguration {
-  @Bean
-  public HazelcastInstance hazelcastInstance(@Value("${hazelcast.service-dns-name}") String hazelcastServiceDnsName) {
-    MapAttributeConfig attributeConfig = new MapAttributeConfig()
-        .setName(HazelcastSessionRepository.PRINCIPAL_NAME_ATTRIBUTE)
-        .setExtractor(PrincipalNameExtractor.class.getName());
-
-    Config config = new Config();
-
-    config
-        .getMapConfig(HazelcastSessionRepository.DEFAULT_SESSION_MAP_NAME)
-        .addMapAttributeConfig(attributeConfig)
-        .addMapIndexConfig(new MapIndexConfig(HazelcastSessionRepository.PRINCIPAL_NAME_ATTRIBUTE, false));
-
-    JoinConfig joinConfig = config.getNetworkConfig().getJoin();
-    joinConfig.getMulticastConfig().setEnabled(false);
-    joinConfig.getKubernetesConfig().setEnabled(true).setProperty("service-dns", hazelcastServiceDnsName);
-
-    return Hazelcast.newHazelcastInstance(config);
-  }
-
   @Bean
   public BaseLdapPathContextSource contextSource(
       @Value("${ldap.url}") String ldapUrl,
