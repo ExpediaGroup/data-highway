@@ -19,6 +19,7 @@ import static java.util.Collections.singletonMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ import com.hotels.road.partition.KeyPathValidator;
 import com.hotels.road.paver.api.RoadAdminClient;
 import com.hotels.road.paver.api.SchemaStoreClient;
 import com.hotels.road.paver.service.exception.NoSuchSchemaException;
+import com.hotels.road.paver.service.patchmapping.EnabledPatchMapping;
 import com.hotels.road.paver.service.patchmapping.PatchMapping;
 import com.hotels.road.rest.model.Authorisation;
 import com.hotels.road.rest.model.Authorisation.Offramp;
@@ -70,6 +72,7 @@ public class PaverServiceImpl implements PaverService {
   private final Map<String, PatchMapping> patchMappings;
   private final RoadSchemaNotificationHandler roadSchemaNotificationHandler;
   private final boolean autoCreateHiveDestination;
+  private final CurrentTimeProvider currentTimeProvider;
 
   @Autowired
   public PaverServiceImpl(
@@ -78,12 +81,14 @@ public class PaverServiceImpl implements PaverService {
       CidrBlockValidator cidrBlockBValidator,
       List<PatchMapping> mappings,
       RoadSchemaNotificationHandler roadSchemaNotificationHandler,
-      @Value("${destinations.hive.autoCreate:true}") boolean autoCreateHiveDestination) {
+      @Value("${destinations.hive.autoCreate:true}") boolean autoCreateHiveDestination,
+      CurrentTimeProvider currentTimeProvider) {
     this.roadAdminClient = roadAdminClient;
     this.schemaStoreClient = schemaStoreClient;
     this.cidrBlockBValidator = cidrBlockBValidator;
     this.roadSchemaNotificationHandler = roadSchemaNotificationHandler;
     this.autoCreateHiveDestination = autoCreateHiveDestination;
+    this.currentTimeProvider = currentTimeProvider;
 
     patchMappings = mappings.stream().collect(Collectors.toMap(PatchMapping::getPath, m -> m));
   }
@@ -102,6 +107,7 @@ public class PaverServiceImpl implements PaverService {
     road.setTeamName(basicModel.getTeamName());
     road.setContactEmail(basicModel.getContactEmail());
     road.setEnabled(basicModel.isEnabled());
+    road.setEnabledTimeStamp(currentTimeProvider.getCurrentTime());
     road.setPartitionPath(basicModel.getPartitionPath());
     road.setAuthorisation(getAuthorisation(basicModel));
 
@@ -158,6 +164,10 @@ public class PaverServiceImpl implements PaverService {
       PatchMapping mapping = patchMappings.get(modelOperation.getPath());
       checkArgument(mapping != null, "\"%s\" is not a valid path to patch", modelOperation.getPath());
       operations.add(mapping.convertOperation(road, modelOperation));
+      if(mapping instanceof EnabledPatchMapping)
+      {
+        operations.add(PatchOperation.replace("/enabledTimeStamp", currentTimeProvider.getCurrentTime()));
+      }
     }
 
     roadAdminClient.updateRoad(new PatchSet(road.getName(), operations));
