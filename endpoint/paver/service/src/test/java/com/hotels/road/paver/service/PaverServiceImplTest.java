@@ -19,6 +19,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toList;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -27,10 +28,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -51,6 +52,7 @@ import com.hotels.road.notification.model.RoadCreatedNotification;
 import com.hotels.road.paver.api.RoadAdminClient;
 import com.hotels.road.paver.api.SchemaStoreClient;
 import com.hotels.road.paver.service.patchmapping.EnabledPatchMapping;
+import com.hotels.road.paver.service.patchmapping.PartitionPathPatchMapping;
 import com.hotels.road.paver.service.patchmapping.PatchMapping;
 import com.hotels.road.rest.model.Authorisation;
 import com.hotels.road.rest.model.Authorisation.Offramp;
@@ -74,7 +76,8 @@ public class PaverServiceImplTest {
       .endRecord();
   private static final String ROAD_NAME = "wide_road";
 
-  private final List<PatchMapping> mappings = Collections.singletonList(new EnabledPatchMapping());
+  private final List<PatchMapping> mappings = Stream.of(new EnabledPatchMapping(), new PartitionPathPatchMapping())
+      .collect(toList());
 
   private final Road road = new Road();
 
@@ -103,7 +106,7 @@ public class PaverServiceImplTest {
     road.getAuthorisation().setOfframp(new Offramp());
     road.getAuthorisation().getOfframp().setAuthorities(emptyMap());
     underTest = new PaverServiceImpl(roadAdminClient, schemaStoreClient, cidrBlockValidator, mappings,
-        notificationHandler, true);
+        notificationHandler, true, () -> 0);
   }
 
   @Test
@@ -184,7 +187,7 @@ public class PaverServiceImplTest {
     BasicRoadModel model = new BasicRoadModel(road.getName(), road.getDescription(), road.getTeamName(),
         road.getContactEmail(), road.isEnabled(), road.getPartitionPath(), null, road.getMetadata());
     underTest = new PaverServiceImpl(roadAdminClient, schemaStoreClient, cidrBlockValidator, mappings,
-        notificationHandler, false);
+        notificationHandler, false, () -> 0);
     underTest.createRoad(model);
     ArgumentCaptor<Road> captor = ArgumentCaptor.forClass(Road.class);
     verify(roadAdminClient).createRoad(captor.capture());
@@ -201,7 +204,7 @@ public class PaverServiceImplTest {
   }
 
   @Test
-  public void applyPatch() throws Exception {
+  public void applyPatch_enableRoad() throws Exception {
     when(roadAdminClient.getRoad(road.getName())).thenReturn(Optional.of(road));
     KafkaStatus status = new KafkaStatus();
     status.setTopicCreated(true);
@@ -214,10 +217,31 @@ public class PaverServiceImplTest {
     PatchSet patch = patchCaptor.getValue();
 
     assertThat(patch.getDocumentId(), is(road.getName()));
-    assertThat(patch.getOperations().size(), is(1));
+    assertThat(patch.getOperations().size(), is(2));
     assertThat(patch.getOperations().get(0).getOperation(), is(Operation.REPLACE));
     assertThat(patch.getOperations().get(0).getPath(), is("/enabled"));
     assertThat(patch.getOperations().get(0).getValue(), is(Boolean.TRUE));
+    assertThat(patch.getOperations().get(1).getOperation(), is(Operation.REPLACE));
+    assertThat(patch.getOperations().get(1).getPath(), is("/enabledTimeStamp"));
+    assertThat(patch.getOperations().get(1).getValue(), is(0L));
+  }
+
+  @Test
+  public void applyPatch() throws Exception {
+    final String partitionPath = "$.group";
+    when(roadAdminClient.getRoad(road.getName())).thenReturn(Optional.of(road));
+    List<PatchOperation> patchSet = Arrays.asList(PatchOperation.add("/partitionPath", partitionPath));
+    underTest.applyPatch(road.getName(), patchSet);
+
+    ArgumentCaptor<PatchSet> patchCaptor = ArgumentCaptor.forClass(PatchSet.class);
+    verify(roadAdminClient).updateRoad(patchCaptor.capture());
+    PatchSet patch = patchCaptor.getValue();
+
+    assertThat(patch.getDocumentId(), is(road.getName()));
+    assertThat(patch.getOperations().size(), is(1));
+    assertThat(patch.getOperations().get(0).getOperation(), is(Operation.REPLACE));
+    assertThat(patch.getOperations().get(0).getPath(), is("/partitionPath"));
+    assertThat(patch.getOperations().get(0).getValue(), is(partitionPath));
   }
 
   @Test(expected = IllegalArgumentException.class)
