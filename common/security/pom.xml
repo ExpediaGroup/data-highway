@@ -12,10 +12,6 @@
   <artifactId>road-security</artifactId>
   <description>Common classes for security operation and access control</description>
 
-  <properties>
-    <hazelcast-kubernetes.version>1.3.1</hazelcast-kubernetes.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>com.hotels.road</groupId>
