@@ -35,12 +35,12 @@ import static org.mockito.Mockito.verify;
 
 import static reactor.core.scheduler.Schedulers.single;
 
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.BUFFER;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.COMMIT;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.ENCODE;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.MESSAGE;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.POLL;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.SEND;
+import static com.hotels.road.offramp.metrics.TimerTag.BUFFER;
+import static com.hotels.road.offramp.metrics.TimerTag.COMMIT;
+import static com.hotels.road.offramp.metrics.TimerTag.ENCODE;
+import static com.hotels.road.offramp.metrics.TimerTag.MESSAGE;
+import static com.hotels.road.offramp.metrics.TimerTag.POLL;
+import static com.hotels.road.offramp.metrics.TimerTag.SEND;
 
 import java.util.List;
 import java.util.Map;
@@ -63,7 +63,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.hotels.road.offramp.api.Payload;
 import com.hotels.road.offramp.api.Record;
-import com.hotels.road.offramp.metrics.OfframpMetrics;
+import com.hotels.road.offramp.metrics.StreamMetrics;
 import com.hotels.road.offramp.model.Cancel;
 import com.hotels.road.offramp.model.Commit;
 import com.hotels.road.offramp.model.CommitResponse;
@@ -83,7 +83,7 @@ public class OfframpServiceV2Test {
   private @Mock Encoder encoder;
   private @Mock MessageFunction messageFunction;
   private @Mock EventSender sender;
-  private @Mock OfframpMetrics metrics;
+  private @Mock StreamMetrics metrics;
 
   private final ObjectMapper mapper = new ObjectMapper();
   private final String podName = "podName";

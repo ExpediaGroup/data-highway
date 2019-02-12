@@ -17,12 +17,12 @@ package com.hotels.road.weighbridge.model;
 
 import java.util.List;
 
-import lombok.Data;
 import lombok.NonNull;
+import lombok.Value;
 
-@Data
+@Value
 public class Broker {
-  private final int id;
-  private final @NonNull String rack;
-  private final @NonNull List<LogDir> logDirs;
+  int id;
+  @NonNull String rack;
+  @NonNull List<LogDir> logDirs;
 }
