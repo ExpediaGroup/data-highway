@@ -1,0 +1,43 @@
+    <!--
+  Copyright (C) 2016-2019 Expedia Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<hazelcast
+  xsi:schemaLocation="http://www.hazelcast.com/schema/config http://www.hazelcast.com/schema/config/hazelcast-config-2.3.xsd"
+  xmlns="http://www.hazelcast.com/schema/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <properties>
+    <property name="hazelcast.rest.enabled">true</property>
+  </properties>
+
+  <network>
+    <port auto-increment="true" port-count="20">5701</port>
+    <join>
+      <multicast enabled="false" />
+      <tcp-ip enabled="true">
+        <member>localhost</member>
+      </tcp-ip>
+    </join>
+  </network>
+
+  <map name="spring:session:sessions">
+    <max-idle-seconds>1800</max-idle-seconds>
+    <eviction-policy>LRU</eviction-policy>
+    <attributes>
+      <attribute extractor="org.springframework.session.hazelcast.PrincipalNameExtractor">principalName</attribute>
+    </attributes>
+    <indexes>
+      <index ordered="false">principalName</index>
+    </indexes>
+  </map>
+</hazelcast>
