@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - New CLI Offramp client tool
 ### Changed
 - Increased highway patrol onrampTime metric window from 30 seconds to 10 minutes.
+- Switch endpoint session storage to Hazelcast from Redis
 
 ## [6.0.3] - 2019-01-29
 ### Changed
