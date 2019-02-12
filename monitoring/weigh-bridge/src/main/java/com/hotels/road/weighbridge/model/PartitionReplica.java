@@ -15,16 +15,16 @@
  */
 package com.hotels.road.weighbridge.model;
 
-import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 public class PartitionReplica {
-  private final int partition;
-  private final boolean leader;
-  private final boolean inSync;
-  private final long sizeOnDisk;
-  private final long logSize;
-  private final long beginningOffset;
-  private final long endOffset;
-  private final long recordCount;
+  int partition;
+  boolean leader;
+  boolean inSync;
+  long sizeOnDisk;
+  long logSize;
+  long beginningOffset;
+  long endOffset;
+  long recordCount;
 }

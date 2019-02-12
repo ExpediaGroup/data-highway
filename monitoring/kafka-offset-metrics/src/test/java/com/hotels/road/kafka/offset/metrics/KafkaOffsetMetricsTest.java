@@ -15,59 +15,57 @@
  */
 package com.hotels.road.kafka.offset.metrics;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 
-import static io.prometheus.client.Collector.Type.GAUGE;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
 import static scala.collection.JavaConversions.asScalaSet;
 import static scala.collection.JavaConversions.mapAsScalaMap;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
+import static com.google.common.collect.Iterables.getOnlyElement;
 
-import io.prometheus.client.Collector;
-import io.prometheus.client.CollectorRegistry;
+import java.util.Map;
+import java.util.Objects;
+
 import org.apache.kafka.common.TopicPartition;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import kafka.admin.AdminClient;
 import kafka.coordinator.group.GroupOverview;
+import lombok.RequiredArgsConstructor;
 import scala.Predef;
 import scala.Tuple2;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KafkaOffsetMetricsTest {
 
-  @Mock
-  private AdminClient adminClient;
+  private @Mock AdminClient adminClient;
 
-  @Mock
-  private Supplier<String> hostnameSupplier;
-
-  @Mock
-  private CollectorRegistry collectorRegistry;
+  private final MeterRegistry registry = new SimpleMeterRegistry();
 
   private KafkaOffsetMetrics underTest;
 
   @Before
   public void before() {
-    underTest = new KafkaOffsetMetrics(adminClient, hostnameSupplier, collectorRegistry);
+    underTest = new KafkaOffsetMetrics(adminClient, registry);
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings("unchecked")
   @Test
   public void happyPath() {
     scala.collection.immutable.List<GroupOverview> listAllGroupsFlattened = asScalaSet(
@@ -78,27 +76,39 @@ public class KafkaOffsetMetricsTest {
         singletonMap(new TopicPartition("topicName", 0), (Object) 1L));
     when(adminClient.listGroupOffsets("groupId")).thenReturn(offsets);
 
-    when(hostnameSupplier.get()).thenReturn("localhost");
+    underTest.refresh();
 
-    List<Collector.MetricFamilySamples> collection = underTest.collect();
+    Matcher<Iterable<? extends Tag>> tags = containsInAnyOrder(tag("group", "groupId"), tag("topic", "topicName"),
+        tag("partition", "0"));
 
-    assertThat(collection.size(), is(1));
-    Collector.MetricFamilySamples mfs = collection.get(0);
-
-    assertThat(mfs.name, is("kafka-offset"));
-    assertThat(mfs.type, is(GAUGE));
-    assertThat(mfs.samples, is(not(empty())));
-    assertThat(mfs.samples, is(hasSize(1)));
-
-    Collector.MetricFamilySamples.Sample sample = mfs.samples.get(0);
-
-    assertThat(sample.name, is("kafka-offset"));
-    assertThat(sample.labelNames, is(asList("host", "group", "topic", "partition")));
-    assertThat(sample.labelValues, is(asList("localhost", "groupId", "topicName", "0")));
-    assertThat(sample.value, is(1.0d));
+    assertMeter(registry.get("kafka_offset").meter(), tags, 1);
   }
 
   private scala.collection.immutable.Map<TopicPartition, Object> asScalaMap(Map<TopicPartition, Object> map) {
     return mapAsScalaMap(map).toMap(Predef.<Tuple2<TopicPartition, Object>> conforms());
+  }
+
+  void assertMeter(Meter meter, Matcher<Iterable<? extends Tag>> tags, double value) {
+    assertThat(meter.getId().getTags(), tags);
+    assertThat(getOnlyElement(meter.measure()).getValue(), is(value));
+  }
+
+  static Matcher<Tag> tag(String key, String value) {
+    return new TagMatcher(Tag.of(key, value));
+  }
+
+  @RequiredArgsConstructor
+  static class TagMatcher extends BaseMatcher<Tag> {
+    private final Tag expected;
+
+    @Override
+    public boolean matches(Object item) {
+      Tag actual = (Tag) item;
+      return Objects.equals(expected.getKey(), actual.getKey())
+          && Objects.equals(expected.getValue(), actual.getValue());
+    }
+
+    @Override
+    public void describeTo(Description description) {}
   }
 }

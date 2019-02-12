@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-import com.hotels.road.offramp.metrics.OfframpMetrics;
+import com.hotels.road.offramp.metrics.StreamMetrics;
 import com.hotels.road.offramp.socket.EventSender;
 import com.hotels.road.offramp.spi.RoadConsumer;
 
@@ -33,7 +33,7 @@ public class OfframpServiceFactory {
       RoadConsumer consumer,
       MessageFunction messageFunction,
       EventSender sender,
-      OfframpMetrics metrics)
+      StreamMetrics metrics)
     throws Exception {
     switch (OfframpVersion.fromString(version)) {
     case OFFRAMP_2:

@@ -15,10 +15,7 @@
  */
 package com.hotels.road.kafka.offset.metrics;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,17 +34,6 @@ public class KafkaOffsetMetricsApp {
     Properties properties = new Properties();
     properties.setProperty("bootstrap.servers", bootstrapServers);
     return AdminClient.create(properties);
-  }
-
-  @Bean
-  Supplier<String> hostnameSupplier() {
-    return () -> {
-      try {
-        return InetAddress.getLocalHost().getHostName();
-      } catch (UnknownHostException e) {
-        throw new RuntimeException(e);
-      }
-    };
   }
 
   public static void main(String[] args) {

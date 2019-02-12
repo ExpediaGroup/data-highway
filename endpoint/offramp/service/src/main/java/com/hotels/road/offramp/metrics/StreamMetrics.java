@@ -15,26 +15,21 @@
  */
 package com.hotels.road.offramp.metrics;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 import java.time.Clock;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
-import io.micrometer.core.instrument.Tags;
 import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 
-public class OfframpMetrics {
+public class StreamMetrics implements AutoCloseable {
   static final String ROAD = "road";
   static final String STREAM = "stream";
 
@@ -51,41 +46,45 @@ public class OfframpMetrics {
   static final String ACTIVE_CONNECTIONS = "active-connections";
   private static final String OFFRAMP_TIMER = "offramp_timer";
 
-  private final MeterRegistry registry;
+  private final MeterPool pool;
   private final Clock clock;
   private final Tags roadStreamTags;
+
+  private final Counter commitSuccessCounter;
+  private final Counter commitFailureCounter;
   private final Counter messageCounter;
   private final Counter bytesCounter;
   private final Counter rebalanceCounter;
   private final Counter roadNotFoundCounter;
-  private final Counter commitSuccessCounter;
-  private final Counter commitFailureCounter;
   private final Counter transportErrorCounter;
   private final Counter connectionEstablishedCounter;
-  private final RoadAndStream roadAndStream;
-  private final Map<RoadAndStream, AtomicInteger> activeConnections;
-  private final ConcurrentMap<Integer, AtomicLong> partitionLatencies;
+  private final SettableGauge activeConnections;
+  private final ConcurrentMap<Integer, SettableTimeGauge> partitionLatencies;
+  private final Map<TimerTag, Timer> timers;
 
-  OfframpMetrics(
-      String roadName,
-      String streamName,
-      MeterRegistry registry,
-      Clock clock,
-      Map<RoadAndStream, AtomicInteger> activeConnections) {
-    this.registry = registry;
+  StreamMetrics(String roadName, String streamName, MeterPool pool, Clock clock) {
+    this.pool = pool;
     this.clock = clock;
-    this.activeConnections = activeConnections;
-    roadAndStream = RoadAndStream.of(roadName, streamName);
+
     roadStreamTags = Tags.of(ROAD, roadName).and(STREAM, streamName);
-    commitSuccessCounter = registry.counter(OFFRAMP + COMMIT_SUCCESS, roadStreamTags);
-    commitFailureCounter = registry.counter(OFFRAMP + COMMIT_FAILURE, roadStreamTags);
-    messageCounter = registry.counter(OFFRAMP + MESSAGE, roadStreamTags);
-    bytesCounter = registry.counter(OFFRAMP + BYTES, roadStreamTags);
-    rebalanceCounter = registry.counter(OFFRAMP + REBALANCE, roadStreamTags);
-    roadNotFoundCounter = registry.counter(OFFRAMP + ROAD_NOT_FOUND, roadStreamTags);
-    transportErrorCounter = registry.counter(OFFRAMP + TRANSPORT_ERROR, roadStreamTags);
-    connectionEstablishedCounter = registry.counter(OFFRAMP + CONNECTIONS_ESTABLISHED, roadStreamTags);
+
+    commitSuccessCounter = pool.takeCounter(OFFRAMP + COMMIT_SUCCESS, roadStreamTags);
+    commitFailureCounter = pool.takeCounter(OFFRAMP + COMMIT_FAILURE, roadStreamTags);
+    messageCounter = pool.takeCounter(OFFRAMP + MESSAGE, roadStreamTags);
+    bytesCounter = pool.takeCounter(OFFRAMP + BYTES, roadStreamTags);
+    rebalanceCounter = pool.takeCounter(OFFRAMP + REBALANCE, roadStreamTags);
+    roadNotFoundCounter = pool.takeCounter(OFFRAMP + ROAD_NOT_FOUND, roadStreamTags);
+    transportErrorCounter = pool.takeCounter(OFFRAMP + TRANSPORT_ERROR, roadStreamTags);
+    connectionEstablishedCounter = pool.takeCounter(OFFRAMP + CONNECTIONS_ESTABLISHED, roadStreamTags);
+
+    activeConnections = pool.takeGauge(OFFRAMP + ACTIVE_CONNECTIONS, roadStreamTags);
+
     partitionLatencies = new ConcurrentHashMap<>();
+
+    timers = new EnumMap<>(TimerTag.class);
+    for (TimerTag tag : TimerTag.values()) {
+      timers.put(tag, pool.takeTimer(OFFRAMP_TIMER, roadStreamTags.and(tag.tag)));
+    }
   }
 
   public void markCommit(boolean success) {
@@ -102,15 +101,30 @@ public class OfframpMetrics {
   }
 
   public void markMessageLatency(int partition, long timestamp) {
-    getPartitionLatencyHolder(partition).set(clock.millis() - timestamp);
+    getPartitionLatencyHolder(partition).setValue(clock.millis() - timestamp);
   }
 
-  private AtomicLong getPartitionLatencyHolder(int partition) {
+  @Override
+  public void close() throws Exception {
+    pool.returnCounter(commitSuccessCounter);
+    pool.returnCounter(commitFailureCounter);
+    pool.returnCounter(messageCounter);
+    pool.returnCounter(bytesCounter);
+    pool.returnCounter(rebalanceCounter);
+    pool.returnCounter(roadNotFoundCounter);
+    pool.returnCounter(transportErrorCounter);
+    pool.returnCounter(connectionEstablishedCounter);
+    pool.returnGauge(activeConnections);
+    partitionLatencies.values().forEach(pool::returnTimeGauge);
+    timers.values().forEach(pool::returnTimer);
+  }
+
+  private SettableTimeGauge getPartitionLatencyHolder(int partition) {
     return partitionLatencies.computeIfAbsent(partition, k -> {
+      String name = OFFRAMP + LATENCY;
       Tags tags = roadStreamTags.and("partition", Integer.toString(k));
-      AtomicLong latencyHolder = new AtomicLong();
-      registry.more().timeGauge(OFFRAMP + LATENCY, tags, latencyHolder, MILLISECONDS, AtomicLong::doubleValue);
-      return latencyHolder;
+
+      return pool.takeTimeGauge(name, tags);
     });
   }
 
@@ -131,51 +145,29 @@ public class OfframpMetrics {
   }
 
   public void record(TimerTag timerTag, Runnable runnable) {
-    registry.timer(OFFRAMP_TIMER, roadStreamTags.and(timerTag.tag)).record(runnable);
+    timers.get(timerTag).record(runnable);
   }
 
   public <T> T record(TimerTag timerTag, Supplier<T> supplier) {
-    return registry.timer(OFFRAMP_TIMER, roadStreamTags.and(timerTag.tag)).record(supplier);
+    return timers.get(timerTag).record(supplier);
   }
 
   public void incrementActiveConnections() {
-    activeConnections
-        .computeIfAbsent(roadAndStream,
-            x -> registry.gauge(OFFRAMP + ACTIVE_CONNECTIONS, roadStreamTags, new AtomicInteger()))
-        .incrementAndGet();
+    activeConnections.increment();
   }
 
   public void decrementActiveConnections() {
-    activeConnections.get(roadAndStream).decrementAndGet();
+    activeConnections.decrement();
   }
 
   @Component
   @RequiredArgsConstructor
   public static class Factory {
-    private final MeterRegistry registry;
+    private final MeterPool pool;
     private final Clock clock;
-    private final Map<RoadAndStream, AtomicInteger> activeConnections = new ConcurrentHashMap<>();
 
-    public OfframpMetrics create(String roadName, String streamName) {
-      return new OfframpMetrics(roadName, streamName, registry, clock, activeConnections);
+    public StreamMetrics create(String roadName, String streamName) {
+      return new StreamMetrics(roadName, streamName, pool, clock);
     }
-  }
-
-  public enum TimerTag {
-    COMMIT,
-    POLL,
-    BUFFER,
-    SEND,
-    ENCODE,
-    MESSAGE;
-
-    public final Tag tag = Tag.of("event", name());
-  }
-
-  @Value
-  @RequiredArgsConstructor(staticName = "of")
-  static class RoadAndStream {
-    String road;
-    String stream;
   }
 }

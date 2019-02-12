@@ -60,7 +60,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.hotels.road.offramp.api.Record;
 import com.hotels.road.offramp.api.UnknownRoadException;
-import com.hotels.road.offramp.metrics.OfframpMetrics;
+import com.hotels.road.offramp.metrics.StreamMetrics;
 import com.hotels.road.offramp.service.MessageFunction;
 import com.hotels.road.offramp.service.OfframpServiceFactory;
 import com.hotels.road.offramp.service.OfframpServiceV2;
@@ -77,8 +77,8 @@ public class OfframpWebSocketHandlerTest {
   private @Mock RoadConsumer consumer;
   private @Mock OfframpServiceV2.Factory serviceV2Factory;
   private @Mock OfframpServiceV2 service;
-  private @Mock OfframpMetrics.Factory metricsFactory;
-  private @Mock OfframpMetrics metrics;
+  private @Mock StreamMetrics.Factory metricsFactory;
+  private @Mock StreamMetrics metrics;
   private @Mock WebSocketSession session;
   private @Mock MessageFunction.Factory messageFunctionFactory;
   private @Mock MessageFunction messageFunction;
