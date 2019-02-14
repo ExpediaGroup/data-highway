@@ -18,12 +18,12 @@ package com.hotels.road.weighbridge.model;
 import java.time.Duration;
 import java.util.List;
 
-import lombok.Data;
 import lombok.NonNull;
+import lombok.Value;
 
-@Data
+@Value
 public class Topic {
-  private final @NonNull String name;
-  private final @NonNull Duration retention;
-  private final @NonNull List<PartitionReplica> partitionReplicas;
+  @NonNull String name;
+  @NonNull Duration retention;
+  @NonNull List<PartitionReplica> partitionReplicas;
 }

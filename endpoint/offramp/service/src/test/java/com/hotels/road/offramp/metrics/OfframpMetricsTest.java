@@ -21,21 +21,18 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
 
-import static com.hotels.road.offramp.metrics.OfframpMetrics.BYTES;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.COMMIT_FAILURE;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.COMMIT_SUCCESS;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.LATENCY;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.MESSAGE;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.OFFRAMP;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.REBALANCE;
+import static com.hotels.road.offramp.metrics.StreamMetrics.BYTES;
+import static com.hotels.road.offramp.metrics.StreamMetrics.COMMIT_FAILURE;
+import static com.hotels.road.offramp.metrics.StreamMetrics.COMMIT_SUCCESS;
+import static com.hotels.road.offramp.metrics.StreamMetrics.LATENCY;
+import static com.hotels.road.offramp.metrics.StreamMetrics.MESSAGE;
+import static com.hotels.road.offramp.metrics.StreamMetrics.OFFRAMP;
+import static com.hotels.road.offramp.metrics.StreamMetrics.REBALANCE;
 
 import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
-import com.google.common.collect.Iterables;
-import io.micrometer.core.instrument.Tags;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -45,7 +42,10 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
+import com.google.common.collect.Iterables;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -57,15 +57,16 @@ public class OfframpMetricsTest {
   private static final Tags ROAD_STREAM_TAGS = Tags.of(ROAD, ROAD_NAME).and(STREAM, STREAM_NAME);
 
   private final MeterRegistry registry = new SimpleMeterRegistry();
+  private final MeterPool pool = new MeterPool(registry);
   private @Mock Clock clock;
-  private OfframpMetrics underTest;
+  private StreamMetrics underTest;
 
   @Test
   public void markCommit() throws Exception {
     Counter commitSuccessCounter = registry.counter(OFFRAMP + COMMIT_SUCCESS, ROAD_STREAM_TAGS);
     Counter commitFailureCounter = registry.counter(OFFRAMP + COMMIT_FAILURE, ROAD_STREAM_TAGS);
 
-    underTest = new OfframpMetrics.Factory(registry, clock).create(ROAD_NAME, STREAM_NAME);
+    underTest = new StreamMetrics.Factory(pool, clock).create(ROAD_NAME, STREAM_NAME);
 
     underTest.markCommit(true);
     assertThat(commitSuccessCounter.count(), is(1.0));
@@ -79,7 +80,7 @@ public class OfframpMetricsTest {
     Counter messagesCounter = registry.counter(OFFRAMP + MESSAGE, ROAD_STREAM_TAGS);
     Counter bytesCounter = registry.counter(OFFRAMP + BYTES, ROAD_STREAM_TAGS);
 
-    underTest = new OfframpMetrics.Factory(registry, clock).create(ROAD_NAME, STREAM_NAME);
+    underTest = new StreamMetrics.Factory(pool, clock).create(ROAD_NAME, STREAM_NAME);
     underTest.markMessage(123L);
 
     assertThat(messagesCounter.count(), is(1.0));
@@ -90,7 +91,7 @@ public class OfframpMetricsTest {
   public void markRebalance() throws Exception {
     Counter rebalanceCounter = registry.counter(OFFRAMP + REBALANCE, ROAD_STREAM_TAGS);
 
-    underTest = new OfframpMetrics.Factory(registry, clock).create(ROAD_NAME, STREAM_NAME);
+    underTest = new StreamMetrics.Factory(pool, clock).create(ROAD_NAME, STREAM_NAME);
     underTest.markRebalance();
 
     assertThat(rebalanceCounter.count(), is(1.0));
@@ -100,7 +101,7 @@ public class OfframpMetricsTest {
   public void markMessageLatency() throws Exception {
     doReturn(5L).when(clock).millis();
 
-    underTest = new OfframpMetrics.Factory(registry, clock).create(ROAD_NAME, STREAM_NAME);
+    underTest = new StreamMetrics.Factory(pool, clock).create(ROAD_NAME, STREAM_NAME);
 
     underTest.markMessageLatency(7, 3L);
     validateLatencyForPartition(7, 0.002); //latency should be 2 mills (5L (current time) - 3L (origin timestamp))

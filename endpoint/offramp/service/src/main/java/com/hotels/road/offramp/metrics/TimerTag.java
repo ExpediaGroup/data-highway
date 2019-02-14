@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.road.offramp.service;
+package com.hotels.road.offramp.metrics;
 
-import com.hotels.road.offramp.api.UnknownRoadException;
-import com.hotels.road.offramp.metrics.StreamMetrics;
-import com.hotels.road.offramp.socket.EventSender;
-import com.hotels.road.offramp.spi.RoadConsumer;
+import io.micrometer.core.instrument.Tag;
 
-public interface OfframpService extends Runnable, AutoCloseable {
-  void onEvent(String event);
+public enum TimerTag {
+  COMMIT,
+  POLL,
+  BUFFER,
+  SEND,
+  ENCODE,
+  MESSAGE;
 
-  interface Factory {
-    OfframpService create(
-        RoadConsumer consumer,
-        MessageFunction messageFunction,
-        EventSender sender,
-        StreamMetrics metrics)
-      throws UnknownRoadException;
-  }
+  public final Tag tag = Tag.of("event", name());
 }

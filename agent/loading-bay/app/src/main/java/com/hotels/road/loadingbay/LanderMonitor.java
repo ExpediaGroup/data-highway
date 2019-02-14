@@ -27,12 +27,13 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import lombok.extern.slf4j.Slf4j;
-
 import com.google.common.annotations.VisibleForTesting;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LanderMonitor implements AutoCloseable {
+
   private final Clock clock;
   private final LanderTaskRunner landerTaskRunner;
   private volatile OffsetDateTime lastRun;
@@ -127,5 +128,4 @@ public class LanderMonitor implements AutoCloseable {
     log.info("Road {} status: LanderTaskRunner running: {}, road enabled: {}, last run: {}, next run: {}",
         landerTaskRunner.getRoadName(), landerTaskRunner.isRunning(), enabled, lastRun, nextExecutionTime);
   }
-
 }

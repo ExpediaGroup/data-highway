@@ -17,13 +17,13 @@ package com.hotels.road.weighbridge.model;
 
 import java.util.List;
 
-import lombok.Data;
 import lombok.NonNull;
+import lombok.Value;
 
-@Data
+@Value
 public class LogDir {
-  private final @NonNull String path;
-  private final long diskFree;
-  private final long diskTotal;
-  private final @NonNull List<Topic> topics;
+  @NonNull String path;
+  long diskFree;
+  long diskTotal;
+  @NonNull List<Topic> topics;
 }

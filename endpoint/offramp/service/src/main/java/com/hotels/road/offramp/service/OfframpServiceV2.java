@@ -19,12 +19,12 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import static lombok.AccessLevel.PACKAGE;
 
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.BUFFER;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.COMMIT;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.ENCODE;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.MESSAGE;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.POLL;
-import static com.hotels.road.offramp.metrics.OfframpMetrics.TimerTag.SEND;
+import static com.hotels.road.offramp.metrics.TimerTag.BUFFER;
+import static com.hotels.road.offramp.metrics.TimerTag.COMMIT;
+import static com.hotels.road.offramp.metrics.TimerTag.ENCODE;
+import static com.hotels.road.offramp.metrics.TimerTag.MESSAGE;
+import static com.hotels.road.offramp.metrics.TimerTag.POLL;
+import static com.hotels.road.offramp.metrics.TimerTag.SEND;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -48,7 +48,7 @@ import com.google.common.math.LongMath;
 import com.hotels.road.offramp.api.Payload;
 import com.hotels.road.offramp.api.Record;
 import com.hotels.road.offramp.api.UnknownRoadException;
-import com.hotels.road.offramp.metrics.OfframpMetrics;
+import com.hotels.road.offramp.metrics.StreamMetrics;
 import com.hotels.road.offramp.model.Commit;
 import com.hotels.road.offramp.model.CommitResponse;
 import com.hotels.road.offramp.model.Connection;
@@ -67,7 +67,7 @@ public class OfframpServiceV2 implements OfframpService {
   private final Encoder encoder;
   private final Function<Payload<JsonNode>, JsonNode> messageFunction;
   private final EventSender sender;
-  private final OfframpMetrics metrics;
+  private final StreamMetrics metrics;
   private final String podName;
   private final @Getter(PACKAGE) BlockingQueue<Event> events = new LinkedBlockingQueue<>();
   private final @Getter(PACKAGE) Queue<Record> buffer = new LinkedList<>();
@@ -228,7 +228,7 @@ public class OfframpServiceV2 implements OfframpService {
         RoadConsumer consumer,
         MessageFunction messageFunction,
         EventSender sender,
-        OfframpMetrics metrics)
+        StreamMetrics metrics)
       throws UnknownRoadException {
       return new OfframpServiceV2(consumer, encoder, messageFunction, sender, metrics, podName);
     }

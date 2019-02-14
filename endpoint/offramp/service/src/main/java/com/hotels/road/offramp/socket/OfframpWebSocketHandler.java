@@ -48,12 +48,11 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import com.hotels.road.offramp.api.UnknownRoadException;
-import com.hotels.road.offramp.metrics.OfframpMetrics;
+import com.hotels.road.offramp.metrics.StreamMetrics;
 import com.hotels.road.offramp.model.DefaultOffset;
 import com.hotels.road.offramp.service.MessageFunction;
 import com.hotels.road.offramp.service.OfframpService;
 import com.hotels.road.offramp.service.OfframpServiceFactory;
-import com.hotels.road.offramp.service.OfframpServiceV2;
 import com.hotels.road.offramp.spi.RoadConsumer;
 import com.hotels.road.rest.model.Sensitivity;
 
@@ -61,13 +60,13 @@ import com.hotels.road.rest.model.Sensitivity;
 @RequiredArgsConstructor
 class OfframpWebSocketHandler extends AbstractWebSocketHandler {
   private final RoadConsumer.Factory consumerFactory;
-  private final OfframpMetrics.Factory metricsFactory;
+  private final StreamMetrics.Factory metricsFactory;
   private final OfframpServiceFactory serviceFactory;
   private final MessageFunction.Factory messageFunctionFactory;
   private final OfframpAuthorisation authorisation;
 
   // These are created only afterConnectionEstablished
-  private @Getter(PACKAGE) OfframpMetrics metrics;
+  private @Getter(PACKAGE) StreamMetrics metrics;
   private @Getter(PACKAGE) OfframpService service;
   private String version;
   private String roadName;
@@ -134,6 +133,7 @@ class OfframpWebSocketHandler extends AbstractWebSocketHandler {
     log.info("Road: {}, stream: {}, sessionId: {} - Connection closed - code: {}, reason: {}", roadName, streamName,
         sessionId, status.getCode(), status.getReason());
     disposable.dispose();
+    metrics.close();
   }
 
   @Override
@@ -171,7 +171,7 @@ class OfframpWebSocketHandler extends AbstractWebSocketHandler {
     try {
       closable.close();
     } catch (Exception e) {
-      new RuntimeException(e);
+      throw new RuntimeException(e);
     }
   }
 

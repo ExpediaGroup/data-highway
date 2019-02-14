@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels.road</groupId>
     <artifactId>road-loading-bay</artifactId>
-    <version>6.0.5-SNAPSHOT</version>
+    <version>6.0.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>road-truck-park</artifactId>

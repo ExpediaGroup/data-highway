@@ -18,72 +18,54 @@ package com.hotels.road.kafka.offset.metrics;
 import static scala.collection.JavaConversions.asJavaCollection;
 import static scala.collection.JavaConversions.mapAsJavaMap;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
 
-import javax.annotation.PostConstruct;
-
-import io.prometheus.client.Collector;
-import io.prometheus.client.Collector.MetricFamilySamples.Sample;
-import io.prometheus.client.CollectorRegistry;
-import kafka.admin.AdminClient;
-import kafka.coordinator.group.GroupOverview;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.TopicPartition;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.MultiGauge;
+import io.micrometer.core.instrument.MultiGauge.Row;
+import io.micrometer.core.instrument.Tags;
+import kafka.admin.AdminClient;
+import kafka.coordinator.group.GroupOverview;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 @Component
-@RequiredArgsConstructor
 @Slf4j
-public class KafkaOffsetMetrics extends Collector {
+public class KafkaOffsetMetrics {
   private final AdminClient adminClient;
-  private final Supplier<String> hostnameSupplier;
-  private final CollectorRegistry collectorRegistry;
+  private final MultiGauge gauge;
 
-  private static final List<String> LABELS =  Arrays.asList("host", "group", "topic", "partition");
-
-  @PostConstruct
-  public void registerExporter() {
-    collectorRegistry.register(this);
+  public KafkaOffsetMetrics(AdminClient adminClient, MeterRegistry registry) {
+    this.adminClient = adminClient;
+    gauge = MultiGauge.builder("kafka_offset").register(registry);
   }
 
-  @Override
-  public List<MetricFamilySamples> collect() {
-
-    List<Sample> samples = asJavaCollection(adminClient.listAllGroupsFlattened())
-        .stream()
+  @Scheduled(fixedDelayString = "${refreshPeriod:PT10S}")
+  public void refresh() {
+    Flux
+        .fromIterable(asJavaCollection(adminClient.listAllGroupsFlattened()))
         .map(GroupOverview::groupId)
-        .flatMap(groupId ->
-        {
-          log.info("Found groupId: {}", groupId);
-          return mapAsJavaMap(adminClient.listGroupOffsets(groupId))
-              .entrySet()
-              .stream()
-              .map(entry -> createSample(groupId, entry));
-        })
-        .collect(Collectors.toList());
-
-    MetricFamilySamples mfs = new MetricFamilySamples("kafka-offset", Type.GAUGE, "kafka-offset", samples);
-
-    return Collections.singletonList(mfs);
+        .doOnNext(groupId -> log.info("Found groupId: {}", groupId))
+        .flatMap(groupId -> Mono
+            .just(mapAsJavaMap(adminClient.listGroupOffsets(groupId)))
+            .flatMapIterable(Map::entrySet)
+            .map(entry -> toRow(groupId, entry)))
+        .collectList()
+        .doOnNext(rows -> gauge.register(rows, true))
+        .then()
+        .block();
   }
 
-  private Sample createSample(String groupId, Map.Entry<TopicPartition, Object> entry) {
-    String partition = Integer.toString(entry.getKey().partition());
-    String topic = clean(entry.getKey().topic());
-
-    List<String> labelValues = Arrays.asList(hostnameSupplier.get(), clean(groupId), topic, partition);
-    Number offset = (Number) entry.getValue();
-
-    return new Sample("kafka-offset", LABELS, labelValues, offset.doubleValue());
-  }
-
-  private String clean(String name) {
-    return name.replaceAll("\\.", "_");
+  private Row toRow(String groupId, Entry<TopicPartition, Object> entry) {
+    Tags tags = Tags.of("group", groupId)
+        .and("topic", entry.getKey().topic())
+        .and("partition", String.valueOf(entry.getKey().partition()));
+    return Row.of(tags, (Number) entry.getValue());
   }
 }
