@@ -19,6 +19,7 @@ import static java.util.Collections.singletonList;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -142,5 +143,12 @@ public class TollboothRoadAdminClientTest {
     client.updateRoad(new PatchSet(road1.getName(), singletonList(PatchOperation.replace("/enabled", Boolean.TRUE))));
 
     assertTrue(store.get(road1.getName()).isEnabled());
+  }
+
+  @Test
+  public void updateRoad_withDeleteRoadPatch() throws Exception {
+    store.put(road1.getName(), road1);
+    client.updateRoad(new PatchSet(road1.getName(), singletonList(PatchOperation.remove(""))));
+    assertNull(store.get(road1.getName()));
   }
 }

@@ -43,4 +43,5 @@ public class Road {
 
   private KafkaStatus status;
   private String compatibilityMode = DEFAULT_COMPATIBILITY_MODE;
+  private MessageStatus messagestatus;
 }

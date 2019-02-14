@@ -15,17 +15,11 @@
  */
 package com.hotels.road.trafficcontrol.model;
 
-import com.hotels.road.rest.model.RoadType;
-
 import lombok.Value;
-import lombok.experimental.Wither;
 
 @Value
-public class KafkaRoad {
-  String name;
-  @Wither
-  String topicName;
-  RoadType type;
-  TrafficControlStatus status;
-  MessageStatus messagestatus;
+public class MessageStatus {
+  long lastUpdated;
+  long numberOfMessages;
+  //TODO should it be a BigInteger?
 }

@@ -97,5 +97,10 @@
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.hotels.road</groupId>
+      <artifactId>road-time-provider</artifactId>
+      <version>6.0.5-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

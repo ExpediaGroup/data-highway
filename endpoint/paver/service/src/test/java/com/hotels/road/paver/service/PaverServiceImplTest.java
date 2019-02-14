@@ -221,7 +221,7 @@ public class PaverServiceImplTest {
     assertThat(patch.getOperations().get(0).getOperation(), is(Operation.REPLACE));
     assertThat(patch.getOperations().get(0).getPath(), is("/enabled"));
     assertThat(patch.getOperations().get(0).getValue(), is(Boolean.TRUE));
-    assertThat(patch.getOperations().get(1).getOperation(), is(Operation.REPLACE));
+    assertThat(patch.getOperations().get(1).getOperation(), is(Operation.ADD));
     assertThat(patch.getOperations().get(1).getPath(), is("/enabledTimeStamp"));
     assertThat(patch.getOperations().get(1).getValue(), is(0L));
   }
@@ -252,6 +252,36 @@ public class PaverServiceImplTest {
     road.setStatus(status);
     List<PatchOperation> patchSet = Arrays.asList(PatchOperation.add("/enabled", Boolean.TRUE));
     underTest.applyPatch(road.getName(), patchSet);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void deleteRoad_failsWithActiveHiveDestination() throws Exception {
+    when(roadAdminClient.getRoad(road.getName())).thenReturn(Optional.of(road));
+    HiveDestination hive = new HiveDestination();
+    hive.setEnabled(true);
+    hive.setLandingInterval(HiveDestination.DEFAULT_LANDING_INTERVAL);
+    road.setDestinations(singletonMap("hive", hive));
+    underTest.deleteRoad(road.getName());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void deleteRoad_failsWithEnabledRoad() throws Exception {
+    when(roadAdminClient.getRoad(road.getName())).thenReturn(Optional.of(road));
+    road.setEnabled(true);
+    underTest.deleteRoad(road.getName());
+  }
+
+  @Test
+  public void deleteRoad() throws Exception {
+    when(roadAdminClient.getRoad(road.getName())).thenReturn(Optional.of(road));
+    underTest.deleteRoad(road.getName());
+    ArgumentCaptor<PatchSet> patchCaptor = ArgumentCaptor.forClass(PatchSet.class);
+    verify(roadAdminClient).updateRoad(patchCaptor.capture());
+    PatchSet patch = patchCaptor.getValue();
+    assertThat(patch.getDocumentId(), is(road.getName()));
+    assertThat(patch.getOperations().size(), is(1));
+    assertThat(patch.getOperations().get(0).getOperation(), is(Operation.REMOVE));
+    assertThat(patch.getOperations().get(0).getPath(), is(""));
   }
 
 }

@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.road.trafficcontrol.model;
+package com.hotels.road.timeprovider;
 
-import com.hotels.road.rest.model.RoadType;
+import java.time.Instant;
+import org.springframework.stereotype.Component;
 
-import lombok.Value;
-import lombok.experimental.Wither;
+@Component
+public class CurrentTimeProviderImpl implements CurrentTimeProvider {
 
-@Value
-public class KafkaRoad {
-  String name;
-  @Wither
-  String topicName;
-  RoadType type;
-  TrafficControlStatus status;
-  MessageStatus messagestatus;
+  @Override
+  public long getCurrentTime() {
+    return Instant.now().toEpochMilli();
+  }
 }

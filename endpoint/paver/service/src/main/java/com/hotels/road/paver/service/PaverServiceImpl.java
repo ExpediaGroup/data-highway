@@ -15,11 +15,11 @@
  */
 package com.hotels.road.paver.service;
 
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +44,7 @@ import com.hotels.road.exception.UnknownRoadException;
 import com.hotels.road.model.core.Destination;
 import com.hotels.road.model.core.HiveDestination;
 import com.hotels.road.model.core.KafkaStatus;
+import com.hotels.road.model.core.MessageStatus;
 import com.hotels.road.model.core.Road;
 import com.hotels.road.model.core.SchemaVersion;
 import com.hotels.road.partition.KeyPathParser;
@@ -62,6 +63,7 @@ import com.hotels.road.rest.model.RoadType;
 import com.hotels.road.rest.model.Sensitivity;
 import com.hotels.road.rest.model.validator.RoadNameValidator;
 import com.hotels.road.security.CidrBlockValidator;
+import com.hotels.road.timeprovider.CurrentTimeProvider;
 import com.hotels.road.tollbooth.client.api.PatchOperation;
 import com.hotels.road.tollbooth.client.api.PatchSet;
 
@@ -159,7 +161,6 @@ public class PaverServiceImpl implements PaverService {
   @Override
   public void applyPatch(String name, List<PatchOperation> modelOperations) throws UnknownRoadException {
     Road road = getRoadOrThrow(name);
-
     List<PatchOperation> operations = new ArrayList<>();
     for (PatchOperation modelOperation : modelOperations) {
       PatchMapping mapping = patchMappings.get(modelOperation.getPath());
@@ -167,10 +168,9 @@ public class PaverServiceImpl implements PaverService {
       operations.add(mapping.convertOperation(road, modelOperation));
       if(mapping instanceof EnabledPatchMapping)
       {
-        operations.add(PatchOperation.replace("/enabledTimeStamp", currentTimeProvider.getCurrentTime()));
+        operations.add(PatchOperation.add("/enabledTimeStamp", currentTimeProvider.getCurrentTime()));
       }
     }
-
     roadAdminClient.updateRoad(new PatchSet(road.getName(), operations));
   }
 
@@ -257,22 +257,31 @@ public class PaverServiceImpl implements PaverService {
     roadSchemaNotificationHandler.handleSchemaDeleted(name, version);
   }
 
-  private boolean zeroActiveDestination(Map<String, Destination> destinations)
-  {
+  private boolean zeroActiveDestination(Map<String, Destination> destinations) {
     return destinations == null || destinations.isEmpty();
+  }
+
+  private boolean hasNoMessages(Road road)
+  {
+    if(!road.isEnabled()) {
+      MessageStatus messagestatus = road.getMessagestatus();
+      if(messagestatus != null && messagestatus.getNumberOfMessages() == 0
+        && road.getEnabledTimeStamp() < messagestatus.getLastUpdated()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
   public void deleteRoad(String name) throws UnknownRoadException {
     Road road = getRoadOrThrow(name);
-    if(road.isEnabled() && zeroActiveDestination(road.getDestinations()) )
-    {
-
+    if(zeroActiveDestination(road.getDestinations()) && hasNoMessages(road)) {
+      roadAdminClient.updateRoad(new PatchSet(road.getName(), singletonList(PatchOperation.remove(""))));
     }
-    else
-    {
-      //throw new
+    else {
+      throw new IllegalArgumentException("Road " + name + " can't be deleted. Make sure there are no active destinations, "
+      + "the road is disabled and there are no messages for this road");
     }
   }
-
 }

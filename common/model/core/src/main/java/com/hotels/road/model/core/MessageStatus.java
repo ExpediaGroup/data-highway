@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.road.paver.service;
+package com.hotels.road.model.core;
 
-import java.time.Instant;
+import lombok.Data;
 
-import org.springframework.stereotype.Component;
-
-@Component
-public class CurrentTimeProviderImpl implements CurrentTimeProvider {
-
-  @Override
-  public long getCurrentTime() {
-    return Instant.now().toEpochMilli();
-  }
+@Data
+public class MessageStatus {
+  long lastUpdated;
+  long numberOfMessages;
 }

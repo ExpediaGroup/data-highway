@@ -16,9 +16,8 @@
 package com.hotels.road.paver.app;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
-
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import com.hotels.road.agents.trafficcop.TrafficCopConfiguration;
 import com.hotels.road.boot.DataHighwayApplication;
@@ -29,8 +28,11 @@ import com.hotels.road.paver.tollbooth.PaverTollboothServiceConfiguration;
 import com.hotels.road.security.LdapSecurityConfiguration;
 import com.hotels.road.swagger.SwaggerConfiguration;
 
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
 @EnableSwagger2
 @SpringBootApplication
+@ComponentScan (basePackages = {"com.hotels.road.paver.app","com.hotels.road.timeprovider"})
 @Import({
     TrafficCopConfiguration.class,
     RoadModelConfiguration.class,
