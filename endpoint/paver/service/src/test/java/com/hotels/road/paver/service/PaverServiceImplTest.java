@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import com.hotels.road.model.core.HiveDestination;
 import com.hotels.road.model.core.KafkaStatus;
+import com.hotels.road.model.core.MessageStatus;
 import com.hotels.road.model.core.Road;
 import com.hotels.road.model.core.SchemaVersion;
 import com.hotels.road.notification.model.RoadCreatedNotification;
@@ -274,6 +275,11 @@ public class PaverServiceImplTest {
   @Test
   public void deleteRoad() throws Exception {
     when(roadAdminClient.getRoad(road.getName())).thenReturn(Optional.of(road));
+    MessageStatus m = new MessageStatus();
+    m.setLastUpdated(100);
+    m.setNumberOfMessages(0);
+    road.setMessagestatus(m);
+    road.setEnabledTimeStamp(99);
     underTest.deleteRoad(road.getName());
     ArgumentCaptor<PatchSet> patchCaptor = ArgumentCaptor.forClass(PatchSet.class);
     verify(roadAdminClient).updateRoad(patchCaptor.capture());

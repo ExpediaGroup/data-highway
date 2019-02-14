@@ -19,6 +19,6 @@ import lombok.Data;
 
 @Data
 public class MessageStatus {
-  long lastUpdated;
-  long numberOfMessages;
+  private long lastUpdated;
+  private long numberOfMessages;
 }
