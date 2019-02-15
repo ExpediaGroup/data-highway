@@ -41,7 +41,7 @@ Loading Bay is responsible for orchestrating the landing of data to S3 on a conf
 
 Try [Test Drive](https://hub.docker.com/r/hotelsdotcom/road-test-drive/tags), an in-memory version of Data Highway that exposes all the public facing endpoints in a single Spring Boot application or Docker container.
 
-```
+```bash
 docker run -p 8080:8080 hotelsdotcom/road-test-drive:<tag>
 ```
 
@@ -52,7 +52,7 @@ Note: For the example below, cURL will prompt for a password which is `pass`.
 
 ### Create a road
 
-```
+```bash
 curl -sk \
   -u user \
   -X POST \
@@ -80,7 +80,7 @@ curl -sk \
 
 ### Register a schema
 
-```
+```bash
 curl -sk \
   -u user\
   -X POST \
@@ -97,7 +97,7 @@ curl -sk \
 
 ### Produce messages
 
-```
+```bash
 curl -sk \
   -u user\
   -H "Content-Type: application/json" \
@@ -107,7 +107,7 @@ curl -sk \
 
 ### Consume messages
 
-```
+```bash
 echo '{"type":"REQUEST","count":1}' |\
   websocat -nk wss://localhost:8080/offramp/v2/roads/my_road/streams/my_stream/messages?defaultOffset=EARLIEST
 ```
@@ -117,14 +117,20 @@ See: [websocat](https://github.com/vi/websocat)
 ## Building
 Build and load docker images to the local docker daemon:
 
-```
+```bash
 mvn clean package -Djib.goal=dockerBuild
 ```
 
 Build without docker images:
 
-```
+```bash
 mvn clean package -Djib.skip
+```
+
+Build and push docker images to a repo:
+
+```bash
+mvn clean package -Ddocker.repo=my.docker.repo
 ```
 
 ## Contributors
