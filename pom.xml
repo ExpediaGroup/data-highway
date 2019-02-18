@@ -94,7 +94,6 @@
     <module>common/tls</module>
     <module>common/traffic-cop</module>
     <module>common/user-agent</module>
-    <module>common/time-provider</module>
     <module>endpoint/offramp</module>
     <module>endpoint/onramp</module>
     <module>endpoint/paver</module>

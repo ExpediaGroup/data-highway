@@ -17,6 +17,7 @@ package com.hotels.road.trafficcontrol;
 
 import static java.util.Collections.singletonMap;
 
+import java.time.Clock;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -26,13 +27,11 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.hotels.road.agents.trafficcop.TrafficCopConfiguration;
 import com.hotels.road.boot.DataHighwayApplication;
-import com.hotels.road.timeprovider.CurrentTimeProvider;
 import com.hotels.road.trafficcontrol.function.MessageCountPerTopicFunction;
 
 import kafka.utils.ZkUtils;
@@ -40,7 +39,6 @@ import kafka.utils.ZkUtils;
 @SpringBootApplication
 @EnableScheduling
 @Import(TrafficCopConfiguration.class)
-@ComponentScan(basePackages = {"com.hotels.road.trafficcontrol", "com.hotels.road.timeprovider"})
 public class TrafficControlApp {
   @Bean(destroyMethod = "close")
   public ZkUtils zkUtils(
@@ -58,10 +56,10 @@ public class TrafficControlApp {
       @Value("${kafka.default.replicationFactor:3}") int defaultFeplicationFactor,
       @Value("${kafka.default.topicConfig:#{null}}") Properties defaultTopicConfig,
       MessageCountPerTopicFunction messageCountPerTopicFunction,
-      CurrentTimeProvider currentTimeProvider) {
+      @Value("#{clock}")Clock clock) {
     defaultTopicConfig = Optional.ofNullable(defaultTopicConfig).orElse(new Properties());
     return new KafkaAdminClient(zkUtils, defaultPartitions, defaultFeplicationFactor, defaultTopicConfig,
-      messageCountPerTopicFunction, currentTimeProvider);
+      messageCountPerTopicFunction, clock);
   }
 
   @Bean

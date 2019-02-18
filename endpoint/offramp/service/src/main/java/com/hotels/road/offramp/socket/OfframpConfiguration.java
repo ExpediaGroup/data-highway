@@ -15,7 +15,6 @@
  */
 package com.hotels.road.offramp.socket;
 
-import java.time.Clock;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -52,10 +51,5 @@ public class OfframpConfiguration {
   @Bean
   public SchemaProvider schemaProvider(@Value("#{store}") Map<String, Road> store) {
     return new SchemaProvider(store);
-  }
-
-  @Bean
-  public Clock clock() {
-    return Clock.systemUTC();
   }
 }

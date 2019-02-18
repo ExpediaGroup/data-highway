@@ -19,6 +19,9 @@ import static java.util.Optional.ofNullable;
 
 import static com.hotels.road.tollbooth.client.api.PatchOperation.add;
 
+import static scala.collection.JavaConversions.mapAsJavaMap;
+
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +31,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.TopicConfig;
 
 import com.hotels.road.rest.model.RoadType;
-import com.hotels.road.timeprovider.CurrentTimeProvider;
 import com.hotels.road.tollbooth.client.api.PatchOperation;
 import com.hotels.road.trafficcontrol.function.MessageCountPerTopicFunction;
 import com.hotels.road.trafficcontrol.model.KafkaRoad;
@@ -63,7 +65,7 @@ public class KafkaAdminClient {
   private final int replicationFactor;
   private final Properties defaultTopicConfig;
   private final MessageCountPerTopicFunction messageCountPerTopicFunction;
-  private final CurrentTimeProvider currentTimeProvider;
+  private final Clock clock;
 
   public void createTopic(KafkaRoad road) throws KafkaException {
     Properties topicConfig = new Properties(defaultTopicConfig);
@@ -105,14 +107,13 @@ public class KafkaAdminClient {
     return AdminUtils.topicExists(zkUtils, name);
   }
 
-  private Map<Object, scala.collection.Seq<Object>> getPartitionInfo(String topic)
-  {
+  private Map<Object, scala.collection.Seq<Object>> getPartitionInfo(String topic) {
     scala.collection.Map<String, scala.collection.Map<Object, scala.collection.Seq<Object>>> partitionAssignmentForTopics = zkUtils
         .getPartitionAssignmentForTopics(scala.collection.immutable.Nil$.MODULE$.$colon$colon(topic));
     scala.collection.Map<Object, scala.collection.Seq<Object>> topicPartitionAssignment = partitionAssignmentForTopics
         .iterator()
         .next()._2;
-    return scala.collection.JavaConversions.mapAsJavaMap(topicPartitionAssignment);
+    return mapAsJavaMap(topicPartitionAssignment);
   }
 
   public KafkaTopicDetails topicDetails(String topic) {
@@ -160,6 +161,6 @@ public class KafkaAdminClient {
   private MessageStatus getMessageStatus(String topicName) {
     Map<Object, scala.collection.Seq<Object>> map = getPartitionInfo(topicName);
     List<TopicPartition> topicPartitions = Flux.fromIterable(map.keySet()).map(m -> new TopicPartition(topicName, (Integer)m)).collectList().block();
-    return new MessageStatus(currentTimeProvider.getCurrentTime(), messageCountPerTopicFunction.apply(topicPartitions));
+    return new MessageStatus(clock.instant().toEpochMilli(), messageCountPerTopicFunction.apply(topicPartitions));
   }
 }

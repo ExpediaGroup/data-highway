@@ -27,6 +27,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -82,6 +85,23 @@ public class PaverServiceImplTest {
 
   private final Road road = new Road();
 
+  private final Clock clock = new Clock() {
+    @Override
+    public ZoneId getZone() {
+      return null;
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return null;
+    }
+
+    @Override
+    public Instant instant() {
+      return Instant.ofEpochMilli(0);
+    }
+  };
+
   @Mock
   private RoadAdminClient roadAdminClient;
   @Mock
@@ -107,7 +127,7 @@ public class PaverServiceImplTest {
     road.getAuthorisation().setOfframp(new Offramp());
     road.getAuthorisation().getOfframp().setAuthorities(emptyMap());
     underTest = new PaverServiceImpl(roadAdminClient, schemaStoreClient, cidrBlockValidator, mappings,
-        notificationHandler, true, () -> 0);
+        notificationHandler, true, clock);
   }
 
   @Test
@@ -188,7 +208,7 @@ public class PaverServiceImplTest {
     BasicRoadModel model = new BasicRoadModel(road.getName(), road.getDescription(), road.getTeamName(),
         road.getContactEmail(), road.isEnabled(), road.getPartitionPath(), null, road.getMetadata());
     underTest = new PaverServiceImpl(roadAdminClient, schemaStoreClient, cidrBlockValidator, mappings,
-        notificationHandler, false, () -> 0);
+        notificationHandler, false, clock);
     underTest.createRoad(model);
     ArgumentCaptor<Road> captor = ArgumentCaptor.forClass(Road.class);
     verify(roadAdminClient).createRoad(captor.capture());

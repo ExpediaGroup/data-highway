@@ -50,7 +50,6 @@ public class UpdateModel {
     Map<String, KafkaRoad> store = new HashMap<>(this.store);
     store.forEach((key, model) -> {
       try {
-        log.info("Inside the scheduled updateMessageStatusInModel with params: Sandeep");
         List<PatchOperation> operations = adminClient.updateMessageStatus(model);
         if (!operations.isEmpty()) {
           emitter.emit(new PatchSet(key, operations));
