@@ -16,6 +16,7 @@
 package com.hotels.road.weighbridge;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -23,30 +24,34 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import com.hotels.road.weighbridge.model.Broker;
+
 import reactor.core.Disposable;
 import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import com.hotels.road.weighbridge.model.Broker;
-
 @Component
 public class BrokerRefresher implements ApplicationRunner, AutoCloseable {
+
   private final Duration refreshPeriod;
   private final BrokerSupplier brokerSupplier;
   private final WeighBridgeMetrics metrics;
   private final AtomicReference<Broker> brokerReference;
   private final Disposable.Swap disposabe = Disposables.swap();
+  private final Map<Integer, Broker> map;
 
   public BrokerRefresher(
       @Value("${refreshPeriod:PT10S}") Duration refreshPeriod,
       BrokerSupplier brokerSupplier,
       WeighBridgeMetrics metrics,
-      AtomicReference<Broker> brokerReference) {
+      AtomicReference<Broker> brokerReference,
+      Map<Integer, Broker> map) {
     this.refreshPeriod = refreshPeriod;
     this.brokerSupplier = brokerSupplier;
     this.metrics = metrics;
     this.brokerReference = brokerReference;
+    this.map = map;
   }
 
   @Override
@@ -55,6 +60,7 @@ public class BrokerRefresher implements ApplicationRunner, AutoCloseable {
         .interval(Duration.ZERO, refreshPeriod)
         .subscribeOn(Schedulers.single())
         .map(x -> brokerSupplier.get())
+        .doOnNext(broker -> map.put(broker.getId(), broker))
         .doOnNext(metrics::update)
         .subscribe(brokerReference::set));
   }
