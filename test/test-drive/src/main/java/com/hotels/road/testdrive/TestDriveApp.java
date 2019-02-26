@@ -15,7 +15,6 @@
  */
 package com.hotels.road.testdrive;
 
-import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,11 +73,6 @@ public class TestDriveApp {
             User.withDefaultPasswordEncoder().username("user").password("pass").authorities("ROLE_USER"));
       }
     };
-  }
-
-  @Bean
-  public Clock clock() {
-    return Clock.systemUTC();
   }
 
   public static void main(String[] args) throws Exception {

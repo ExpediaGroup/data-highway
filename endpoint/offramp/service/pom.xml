@@ -109,6 +109,11 @@
       <artifactId>logback-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.hotels.road</groupId>
+      <artifactId>road-controllers-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 </project>
