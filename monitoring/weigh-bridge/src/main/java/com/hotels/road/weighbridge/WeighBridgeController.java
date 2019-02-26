@@ -15,22 +15,32 @@
  */
 package com.hotels.road.weighbridge;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.RequiredArgsConstructor;
-
 import com.hotels.road.weighbridge.model.Broker;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 public class WeighBridgeController {
-  private final AtomicReference<Broker> brokerReference;
 
-  @GetMapping("/broker")
-  public Broker get() {
+  private final AtomicReference<Broker> brokerReference;
+  private final Map<Integer, Broker> map;
+
+  @GetMapping("/brokers/current")
+  public Broker getCurrentBroker() {
     return brokerReference.get();
+  }
+
+  @GetMapping("/brokers")
+  public List<Broker> getAllBrokers() {
+    return new ArrayList<>(map.values());
   }
 }

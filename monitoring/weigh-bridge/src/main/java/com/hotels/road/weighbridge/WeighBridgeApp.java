@@ -24,15 +24,20 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hazelcast.core.HazelcastInstance;
 
 import com.hotels.road.boot.DataHighwayApplication;
 import com.hotels.road.weighbridge.model.Broker;
 
 @SpringBootApplication
 public class WeighBridgeApp {
+
   @Bean
   public Map<String, Object> kafkaConfig(@Value("${kafka.bootstrapServers}") String bootstrapServers) {
     return singletonMap("bootstrap.servers", bootstrapServers);
@@ -54,7 +59,18 @@ public class WeighBridgeApp {
     return new AtomicReference<>();
   }
 
-  public static void main(String[] args) throws Exception {
+  @Bean
+  public Map<Integer, Broker> map(@Autowired HazelcastInstance hazelcastInstance,
+                                  @Value("${cache.map:broker}") String mapName) {
+    return hazelcastInstance.getMap(mapName);
+  }
+
+  @Bean
+  public ObjectMapper objectMapper() {
+    return new ObjectMapper();
+  }
+
+  public static void main(String[] args) {
     DataHighwayApplication.run(WeighBridgeApp.class, args);
   }
 }

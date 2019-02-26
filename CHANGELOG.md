@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Onramp: Messages per request metric.
 - New CLI Offramp client tool
+- New service exposed by weigh-bridge to collect aggregate Kafka metrics.
+
 ### Changed
 - Increased highway patrol onrampTime metric window from 30 seconds to 10 minutes.
 - Switch endpoint session storage to Hazelcast from Redis

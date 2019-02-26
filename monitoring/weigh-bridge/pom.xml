@@ -94,6 +94,10 @@
       <classifier>test</classifier>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast-spring</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
