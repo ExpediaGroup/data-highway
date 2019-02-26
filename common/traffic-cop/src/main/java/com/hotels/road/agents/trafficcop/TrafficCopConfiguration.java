@@ -72,8 +72,4 @@ public class TrafficCopConfiguration {
     return new KafkaPatchSetEmitter(topic, kafkaProducer, mapper);
   }
 
-  @Bean
-  public Clock clock() {
-    return Clock.systemUTC();
-  }
 }

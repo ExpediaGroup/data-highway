@@ -112,7 +112,7 @@ public class PaverServiceImpl implements PaverService {
     road.setEnabledTimeStamp(clock.instant().toEpochMilli());
     road.setPartitionPath(basicModel.getPartitionPath());
     road.setAuthorisation(getAuthorisation(basicModel));
-
+    road.setDeleted(false);
     road.setMetadata(basicModel.getMetadata());
     road.setCompatibilityMode(Road.DEFAULT_COMPATIBILITY_MODE);
 
@@ -259,8 +259,7 @@ public class PaverServiceImpl implements PaverService {
     return destinations == null || destinations.isEmpty();
   }
 
-  private boolean hasNoMessages(Road road)
-  {
+  private boolean hasNoMessages(Road road) {
     if(!road.isEnabled()) {
       MessageStatus messagestatus = road.getMessagestatus();
       if(messagestatus != null && messagestatus.getNumberOfMessages() == 0
@@ -275,9 +274,8 @@ public class PaverServiceImpl implements PaverService {
   public void deleteRoad(String name) throws UnknownRoadException {
     Road road = getRoadOrThrow(name);
     if(zeroActiveDestination(road.getDestinations()) && hasNoMessages(road)) {
-      roadAdminClient.updateRoad(new PatchSet(road.getName(), singletonList(PatchOperation.remove(""))));
-    }
-    else {
+      roadAdminClient.updateRoad(new PatchSet(road.getName(), singletonList(PatchOperation.add("/deleted",true))));
+    } else {
       throw new IllegalArgumentException("Road " + name + " can't be deleted. Make sure there are no active destinations, "
       + "the road is disabled and there are no messages for this road");
     }

@@ -32,13 +32,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.hotels.road.agents.trafficcop.TrafficCopConfiguration;
 import com.hotels.road.boot.DataHighwayApplication;
+import com.hotels.road.rest.controller.common.CommonClockConfiguration;
 import com.hotels.road.trafficcontrol.function.MessageCountPerTopicFunction;
 
 import kafka.utils.ZkUtils;
 
 @SpringBootApplication
 @EnableScheduling
-@Import(TrafficCopConfiguration.class)
+@Import({
+    TrafficCopConfiguration.class,
+    CommonClockConfiguration.class })
 public class TrafficControlApp {
   @Bean(destroyMethod = "close")
   public ZkUtils zkUtils(
@@ -56,7 +59,7 @@ public class TrafficControlApp {
       @Value("${kafka.default.replicationFactor:3}") int defaultFeplicationFactor,
       @Value("${kafka.default.topicConfig:#{null}}") Properties defaultTopicConfig,
       MessageCountPerTopicFunction messageCountPerTopicFunction,
-      @Value("#{clock}")Clock clock) {
+      @Value("#{clock}") Clock clock) {
     defaultTopicConfig = Optional.ofNullable(defaultTopicConfig).orElse(new Properties());
     return new KafkaAdminClient(zkUtils, defaultPartitions, defaultFeplicationFactor, defaultTopicConfig,
       messageCountPerTopicFunction, clock);

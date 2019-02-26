@@ -126,6 +126,7 @@ public class PaverServiceImplTest {
     road.getAuthorisation().getOnramp().setAuthorities(emptyList());
     road.getAuthorisation().setOfframp(new Offramp());
     road.getAuthorisation().getOfframp().setAuthorities(emptyMap());
+    road.setDeleted(false);
     underTest = new PaverServiceImpl(roadAdminClient, schemaStoreClient, cidrBlockValidator, mappings,
         notificationHandler, true, clock);
   }
@@ -306,8 +307,9 @@ public class PaverServiceImplTest {
     PatchSet patch = patchCaptor.getValue();
     assertThat(patch.getDocumentId(), is(road.getName()));
     assertThat(patch.getOperations().size(), is(1));
-    assertThat(patch.getOperations().get(0).getOperation(), is(Operation.REMOVE));
-    assertThat(patch.getOperations().get(0).getPath(), is(""));
+    assertThat(patch.getOperations().get(0).getOperation(), is(Operation.ADD));
+    assertThat(patch.getOperations().get(0).getPath(), is("/deleted"));
+    assertThat(patch.getOperations().get(0).getValue(), is(true));
   }
 
 }

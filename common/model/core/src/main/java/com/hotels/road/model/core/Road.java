@@ -40,8 +40,8 @@ public class Road {
   private Map<String, String> metadata = new HashMap<>();
   private Map<Integer, SchemaVersion> schemas = new HashMap<>();
   private Map<String, Destination> destinations = new HashMap<>();
-
   private KafkaStatus status;
   private String compatibilityMode = DEFAULT_COMPATIBILITY_MODE;
   private MessageStatus messagestatus;
+  private boolean deleted;
 }

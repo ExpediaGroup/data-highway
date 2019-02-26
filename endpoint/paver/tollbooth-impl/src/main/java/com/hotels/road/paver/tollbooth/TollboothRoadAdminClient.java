@@ -25,6 +25,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,13 +56,18 @@ public class TollboothRoadAdminClient implements RoadAdminClient {
 
   @Override
   public SortedSet<String> listRoads() throws ServiceException {
-    return ImmutableSortedSet.copyOf(store.keySet());
+    return ImmutableSortedSet.copyOf(store.entrySet().stream().filter(r -> !r.getValue().isDeleted())
+      .map(x -> x.getKey()).collect(Collectors.toSet()));
   }
 
   @Override
   public Optional<Road> getRoad(String name) throws IllegalArgumentException, ServiceException {
     checkNotBlank(name, "name");
-    return Optional.ofNullable(store.get(name));
+    Road road = store.get(name);
+    if(road == null || road.isDeleted()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(road);
   }
 
   @Override

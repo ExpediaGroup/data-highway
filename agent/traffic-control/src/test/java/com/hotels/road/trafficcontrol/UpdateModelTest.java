@@ -47,7 +47,7 @@ public class UpdateModelTest {
 
   public UpdateModel messageStatusUpdator;
   public KafkaRoad testRoad = new KafkaRoad("test_road",
-                    "road.test_road", RoadType.NORMAL, null, null);
+                    "road.test_road", RoadType.NORMAL, null, null, false);
 
   @Before
   public void before() throws Exception {

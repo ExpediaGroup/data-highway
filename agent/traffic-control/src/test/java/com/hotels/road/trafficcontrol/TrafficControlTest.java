@@ -49,7 +49,7 @@ public class TrafficControlTest {
 
   private TrafficControl trafficControl;
 
-  static KafkaRoad testRoadModel = new KafkaRoad("test_road", "road.test_road", RoadType.NORMAL, null, null);
+  static KafkaRoad testRoadModel = new KafkaRoad("test_road", "road.test_road", RoadType.NORMAL, null, null, false);
 
   @Before
   public void setUp() {
@@ -72,7 +72,7 @@ public class TrafficControlTest {
 
   @Test
   public void create_road_generate_topic_name() throws Exception {
-    KafkaRoad testRoadModel = new KafkaRoad("test_road", null, RoadType.NORMAL, null, null);
+    KafkaRoad testRoadModel = new KafkaRoad("test_road", null, RoadType.NORMAL, null, null, false);
     List<PatchOperation> operations = trafficControl.newModel("test_road", testRoadModel);
 
     verify(kafkaAdminClient).createTopic(TrafficControlTest.testRoadModel);
@@ -133,7 +133,7 @@ public class TrafficControlTest {
   @Test
   public void inspectRoad_does_nothing_when_topic_exists_and_is_correct() throws Exception {
     KafkaRoad model = new KafkaRoad("test_road", "road.test_road", RoadType.NORMAL,
-        new TrafficControlStatus(true, 12, 3, ""), null);
+        new TrafficControlStatus(true, 12, 3, ""), null, false);
 
     given(kafkaAdminClient.topicExists("road.test_road")).willReturn(true);
     given(kafkaAdminClient.topicDetails("road.test_road")).willReturn(new KafkaTopicDetails(RoadType.NORMAL, 12, 3));
@@ -146,7 +146,7 @@ public class TrafficControlTest {
   @Test
   public void inspectRoad_updates_status_when_it_does_not_match_topic() throws Exception {
     KafkaRoad model = new KafkaRoad("test_road", "road.test_road", RoadType.NORMAL,
-        new TrafficControlStatus(true, 6, 3, ""), null);
+        new TrafficControlStatus(true, 6, 3, ""), null, false);
 
     given(kafkaAdminClient.topicExists("road.test_road")).willReturn(true);
     given(kafkaAdminClient.topicDetails("road.test_road")).willReturn(new KafkaTopicDetails(RoadType.NORMAL, 12, 3));
@@ -162,7 +162,7 @@ public class TrafficControlTest {
   @Test
   public void inspectRoad_corrects_road_type() throws Exception {
     KafkaRoad model = new KafkaRoad("test_road", "road.test_road", RoadType.NORMAL,
-        new TrafficControlStatus(true, 6, 3, ""), null);
+        new TrafficControlStatus(true, 6, 3, ""), null, false);
 
     given(kafkaAdminClient.topicExists("road.test_road")).willReturn(true);
     given(kafkaAdminClient.topicDetails("road.test_road")).willReturn(new KafkaTopicDetails(RoadType.COMPACT, 6, 3));

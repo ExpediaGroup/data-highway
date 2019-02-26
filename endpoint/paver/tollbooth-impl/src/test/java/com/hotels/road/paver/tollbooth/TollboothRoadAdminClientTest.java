@@ -66,6 +66,7 @@ public class TollboothRoadAdminClientTest {
     status = new KafkaStatus();
     status.setTopicCreated(false);
     road1.setStatus(status);
+    road1.setDeleted(false);
 
     PatchSetEmitter patchSetEmitter = new PatchSetEmitter() {
 
@@ -104,6 +105,15 @@ public class TollboothRoadAdminClientTest {
     assertTrue(roads.contains("road1"));
   }
 
+  @Test
+  public void listRoads_deleted() throws Exception {
+    road1.setDeleted(true);
+    store.put("road1", road1);
+    Set<String> roads;
+    roads = client.listRoads();
+    assertTrue(roads.isEmpty());
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void getRoad_fails_when_blank() throws Exception {
     client.getRoad(" ");
@@ -121,6 +131,14 @@ public class TollboothRoadAdminClientTest {
     Optional<Road> road = client.getRoad(road1.getName());
     assertTrue(road.isPresent());
     assertThat(road.get(), is(road1));
+  }
+
+  @Test
+  public void getRoad_returns_empty_optional_when_road_isDeleted() throws Exception {
+    road1.setDeleted(true);
+    store.put(road1.getName(), road1);
+    Optional<Road> road = client.getRoad(road1.getName());
+    assertFalse(road.isPresent());
   }
 
   @Test

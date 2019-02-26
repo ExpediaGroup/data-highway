@@ -50,7 +50,8 @@ public class KafkaModelReaderTest {
                 + "  \"messagestatus\": {\n"
                 + "    \"lastUpdated\": 124947,\n"
                 + "    \"numberOfMessages\": 30\n"
-                + "  }\n"
+                + "  },\n"
+                + "  \"deleted\": false\n"
                 + "}");
     KafkaRoad road = reader.read(json);
 
@@ -62,7 +63,7 @@ public class KafkaModelReaderTest {
                 "road.test_topic6",
                 RoadType.COMPACT,
                 new TrafficControlStatus(true, 6, 3, ""),
-                new MessageStatus(124947, 30))));
+                new MessageStatus(124947, 30), false)));
   }
 
   @Test
@@ -74,10 +75,11 @@ public class KafkaModelReaderTest {
                 + "  \"topicName\": \"road.test_topic6\",\n"
                 + "  \"type\":\"COMPACT\",\n"
                 + "  \"status\": null,\n"
-                + "  \"messagestatus\": null\n"
+                + "  \"messagestatus\": null,\n"
+                + "  \"deleted\": true\n"
                 + "}");
     KafkaRoad road = reader.read(json);
 
-    assertThat(road, is(new KafkaRoad("test_topic6", "road.test_topic6", RoadType.COMPACT, null, null)));
+    assertThat(road, is(new KafkaRoad("test_topic6", "road.test_topic6", RoadType.COMPACT, null, null, true)));
   }
 }

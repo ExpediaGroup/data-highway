@@ -21,5 +21,4 @@ import lombok.Value;
 public class MessageStatus {
   long lastUpdated;
   long numberOfMessages;
-  //TODO should it be a BigInteger?
 }

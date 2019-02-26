@@ -81,6 +81,7 @@ public class TollboothSchemaStoreClientTest {
     status.setTopicCreated(false);
     road1.setStatus(status);
     road1.setSchemas(Collections.emptyMap());
+    road1.setDeleted(false);
 
     schema1 = SchemaBuilder.builder().record("a").fields().name("v").type().booleanType().noDefault().endRecord();
     schema2 = SchemaBuilder
@@ -159,12 +160,24 @@ public class TollboothSchemaStoreClientTest {
     assertTrue(schemas.values().contains(schemaVersion1));
   }
 
+  @Test(expected = UnknownRoadException.class)
+  public void getAllSchemaVersions_fails_when_road_isDeleted() throws Exception {
+    road1.setDeleted(true);
+    client.getAllSchemaVersions("road1");
+  }
+
   @Test
   public void getLatestActiveSchema() throws Exception {
     road1.setSchemas(schemaVersionsMap);
 
     Optional<SchemaVersion> schema = client.getLatestActiveSchema("road1");
     assertThat(schema.get().getSchema(), is(schema3));
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void getLatestActiveSchema_fails_when_road_isDeleted() throws Exception {
+    road1.setDeleted(true);
+    client.getLatestActiveSchema("road1");
   }
 
   @Test
@@ -275,6 +288,12 @@ public class TollboothSchemaStoreClientTest {
   }
 
   @Test(expected = UnknownRoadException.class)
+  public void registerSchema_fails_when_road_isDeleted() throws Exception {
+    road1.setDeleted(true);
+    client.registerSchema("road1", schema1);
+  }
+
+  @Test(expected = UnknownRoadException.class)
   public void deleteSchemaForRoadThatDoesNotExist() throws Exception {
     client.deleteSchemaVersion("not-exist", 1);
   }
@@ -284,6 +303,12 @@ public class TollboothSchemaStoreClientTest {
     client.registerSchema("road1", schema1);
     client.deleteSchemaVersion("road1", 1);
     assertTrue(client.getAllSchemaVersions("road1").get(1).isDeleted());
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void deleteSchema_fails_when_road_isDeleted() throws Exception {
+    road1.setDeleted(true);
+    client.deleteSchemaVersion("road1", 1);
   }
 
   @Test

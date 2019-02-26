@@ -150,12 +150,19 @@ public class KafkaAdminClient {
     String topicName = road.getTopicName();
     if (topicName != null && topicExists(topicName)) {
       result.add(add(MESSAGE_STATUS_PATH, getMessageStatus(topicName)));
-    }
-    else {
+    } else {
       log.info("Will skip updating MessageStatus because model Topic name is null or Topic is not yet created in Kafka");
     }
 
     return result;
+  }
+
+  public void deleteTopic(String topicName) {
+    if (topicName == null) {
+      log.warn("Topic name is null");
+      return;
+    }
+    AdminUtils.deleteTopic(zkUtils, topicName);
   }
 
   private MessageStatus getMessageStatus(String topicName) {

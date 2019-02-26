@@ -24,6 +24,7 @@ import com.hotels.road.model.kafka.RoadModelConfiguration;
 import com.hotels.road.notification.sns.config.SnsConfiguration;
 import com.hotels.road.paver.PaverControllerConfiguration;
 import com.hotels.road.paver.tollbooth.PaverTollboothServiceConfiguration;
+import com.hotels.road.rest.controller.common.CommonClockConfiguration;
 import com.hotels.road.security.LdapSecurityConfiguration;
 import com.hotels.road.swagger.SwaggerConfiguration;
 
@@ -38,7 +39,8 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
     LdapSecurityConfiguration.class,
     PaverTollboothServiceConfiguration.class,
     SnsConfiguration.class,
-    SwaggerConfiguration.class })
+    SwaggerConfiguration.class,
+    CommonClockConfiguration.class })
 public class PaverApp {
   public static void main(String[] args) throws Exception {
     DataHighwayApplication.run(PaverApp.class, args);

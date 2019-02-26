@@ -45,6 +45,7 @@ public class OnrampServiceImpl implements OnrampService {
 
   @Override
   public Optional<Onramp> getOnramp(String name) {
+    //TODO: Should we also add a check here to see if Road is deleted? Will mostly a sanity check
     return Optional.ofNullable(roads.get(name)).map(road -> new OnrampImpl(metrics, kafkaProducer, road));
   }
 }
