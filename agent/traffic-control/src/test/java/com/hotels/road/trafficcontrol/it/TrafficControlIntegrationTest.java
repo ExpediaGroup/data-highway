@@ -257,13 +257,13 @@ public class TrafficControlIntegrationTest {
   }
 
   @Test(timeout = 20000)
-  public void inspect_messagestatus() throws Exception {
+  public void inspect_messageStatus() throws Exception {
     KafkaRoad model = new KafkaRoad("test", "test_topic3", RoadType.NORMAL, new TrafficControlStatus(true, 6, 1, ""), null, false);
     context.getBean(TrafficControl.class).inspectModel("test", model);
     final List<PatchOperation> patchOperations = context.getBean(KafkaAdminClient.class).updateMessageStatus(model);
     assertThat(patchOperations.size(), is(1));
     assertThat(patchOperations.get(0).getOperation(), is(ADD));
-    assertThat(patchOperations.get(0).getPath(), is("/messagestatus"));
+    assertThat(patchOperations.get(0).getPath(), is("/messageStatus"));
   }
 
   @Test(timeout = 20000)

@@ -45,7 +45,7 @@ public class UpdateModel {
     this.adminClient = adminClient;
   }
 
-  @Scheduled(initialDelayString = "${model.messagestatus.initialdelay:3600000}", fixedRateString = "${model.messagestatus.fixedrate:3600000}")
+  @Scheduled(initialDelayString = "${messageStatus.initialdelayMs:3600000}", fixedRateString = "${messageStatus.fixedrateMs:3600000}")
   public void updateMessageStatusInModel() {
     Map<String, KafkaRoad> store = new HashMap<>(this.store);
     store.forEach((key, model) -> {

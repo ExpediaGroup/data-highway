@@ -58,9 +58,9 @@ public class UpdateModelTest {
   @Test
   public void operations_are_passed_to_emitter() throws Exception {
     MessageStatus status = new MessageStatus(15134544543L, 100);
-    given(adminClient.updateMessageStatus(testRoad)).willReturn(singletonList(add("/messagestatus", status)));
+    given(adminClient.updateMessageStatus(testRoad)).willReturn(singletonList(add("/messageStatus", status)));
     messageStatusUpdator.updateMessageStatusInModel();
-    then(emitter).should().emit(new PatchSet("test_road", singletonList(add("/messagestatus", status))));
+    then(emitter).should().emit(new PatchSet("test_road", singletonList(add("/messageStatus", status))));
   }
 
   @Test

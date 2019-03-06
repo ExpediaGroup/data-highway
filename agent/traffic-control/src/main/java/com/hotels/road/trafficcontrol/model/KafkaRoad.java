@@ -27,6 +27,6 @@ public class KafkaRoad {
   String topicName;
   RoadType type;
   TrafficControlStatus status;
-  MessageStatus messagestatus;
+  MessageStatus messageStatus;
   boolean deleted;
 }

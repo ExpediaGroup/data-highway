@@ -299,7 +299,7 @@ public class PaverServiceImplTest {
     MessageStatus m = new MessageStatus();
     m.setLastUpdated(100);
     m.setNumberOfMessages(0);
-    road.setMessagestatus(m);
+    road.setMessageStatus(m);
     road.setEnabledTimeStamp(99);
     underTest.deleteRoad(road.getName());
     ArgumentCaptor<PatchSet> patchCaptor = ArgumentCaptor.forClass(PatchSet.class);

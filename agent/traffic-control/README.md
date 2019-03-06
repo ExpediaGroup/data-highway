@@ -7,7 +7,7 @@ Specifically, it ensures that a [Kafka](https://kafka.apache.org/) topic exists 
 model with the current status of whether the `topicExists`, the number of `partitions`, the `replicationFactor` and 
 `numberOfMessages` for each topic.
 
-The agent reads from `/topic` and reads from and writes to `/status` and `messagestatus` in the model. Below is an example of the model
+The agent reads from `/topic` and reads from and writes to `/status` and `messageStatus` in the model. Below is an example of the model
 subset that the agent uses with example values:
 
 ```
@@ -19,7 +19,7 @@ subset that the agent uses with example values:
     "replicationFactor": 3,
     "message": "Error creating Kafka topic \"exceptionMessage\""
   },
-  "messagestatus": {
+  "messageStatus": {
       "lastUpdated": 15032459590,
       "numberOfMessages": 60000
     }
@@ -35,8 +35,8 @@ All arguments without a default are mandatory.
 | `kafka.zookeeper`                   | -                      | Connection string for Zookeeper to allow creation of Kafka topics. In Kubernetes, a typical value would be `zookeeper:2181`. It should be the same value as used to configure the Kafka brokers.
 | `kafka.sessionTimeout`              | 60000 (milliseconds)   | Zookeeper connection option.
 | `kafka.connectionTimeout`           | 60000 (milliseconds)   | Zookeeper connection option.
-| `model.messagestatus.initialdelay`  | 3600000 (milliseconds) | Initial Delay in updating messagestatus in model on boot up.
-| `model.messagestatus.fixedrate`     | 3600000 (milliseconds) | Schedule for updating messagestatus in model
+| `messageStatus.initialdelayMs`      | 3600000 (milliseconds) | Initial Delay in updating messagestatus in model on boot up.
+| `messageStatus.fixedrateMs`         | 3600000 (milliseconds) | Schedule for updating messagestatus in model
 | `kafka.zkSecurityEnabled`           | false                  | Zookeeper connection option.
 | `kafka.bootstrapServers`            | -                      | Connection string for Kafka to allow reading of models and writing modifications. In Kubernetes, a typical value would be `kafka:9092`.
 | `kafka.store.topic`                 | -                      | Kafka topic for reading models.

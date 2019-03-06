@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.TopicConfig;
@@ -45,6 +46,7 @@ import kafka.utils.ZkUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
+import scala.collection.JavaConversions;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -52,7 +54,7 @@ public class KafkaAdminClient {
   private static final String LEADER_THROTTLED_REPLICAS = LogConfig.LeaderReplicationThrottledReplicasProp();
   private static final String FOLLOWER_THROTTLED_REPLICAS = LogConfig.FollowerReplicationThrottledReplicasProp();
   private static final String WILDCARD = "*";
-  private static final String MESSAGE_STATUS_PATH = "/messagestatus";
+  private static final String MESSAGE_STATUS_PATH = "/messageStatus";
 
   /*
    * AdminUtils.createTopic$default$6() is the method that is generated for the default RackAwareMode.Enforced mode
@@ -107,17 +109,19 @@ public class KafkaAdminClient {
     return AdminUtils.topicExists(zkUtils, name);
   }
 
-  private Map<Object, scala.collection.Seq<Object>> getPartitionInfo(String topic) {
+  private Map<Object, List<Object>> getPartitionInfo(String topic) {
     scala.collection.Map<String, scala.collection.Map<Object, scala.collection.Seq<Object>>> partitionAssignmentForTopics = zkUtils
         .getPartitionAssignmentForTopics(scala.collection.immutable.Nil$.MODULE$.$colon$colon(topic));
     scala.collection.Map<Object, scala.collection.Seq<Object>> topicPartitionAssignment = partitionAssignmentForTopics
         .iterator()
         .next()._2;
-    return mapAsJavaMap(topicPartitionAssignment);
+
+    return mapAsJavaMap(topicPartitionAssignment).entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> JavaConversions.seqAsJavaList(e.getValue())));
   }
 
   public KafkaTopicDetails topicDetails(String topic) {
-    Map<Object, scala.collection.Seq<Object>> map = getPartitionInfo(topic);
+    Map<Object, List<Object>> map = getPartitionInfo(topic);
     int numPartitions = map.size();
     int numReplicas = map.get(0).size();
 
@@ -166,7 +170,7 @@ public class KafkaAdminClient {
   }
 
   private MessageStatus getMessageStatus(String topicName) {
-    Map<Object, scala.collection.Seq<Object>> map = getPartitionInfo(topicName);
+    Map<Object, List<Object>> map = getPartitionInfo(topicName);
     List<TopicPartition> topicPartitions = Flux.fromIterable(map.keySet()).map(m -> new TopicPartition(topicName, (Integer)m)).collectList().block();
     return new MessageStatus(clock.instant().toEpochMilli(), messageCountPerTopicFunction.apply(topicPartitions));
   }

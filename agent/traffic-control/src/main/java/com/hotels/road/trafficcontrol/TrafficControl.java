@@ -113,7 +113,12 @@ public class TrafficControl implements Agent<KafkaRoad> {
     if(road.isDeleted()) {
       String topicName = road.getTopicName();
       if (adminClient.topicExists(topicName)) {
-        adminClient.deleteTopic(topicName);
+        try {
+          adminClient.deleteTopic(topicName);
+        } catch (Exception e) {
+          log.warn("Road deletion failed for topic {}", topicName);
+          return false;
+        }
       }
       return true;
     }

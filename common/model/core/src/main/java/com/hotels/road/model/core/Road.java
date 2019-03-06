@@ -42,6 +42,6 @@ public class Road {
   private Map<String, Destination> destinations = new HashMap<>();
   private KafkaStatus status;
   private String compatibilityMode = DEFAULT_COMPATIBILITY_MODE;
-  private MessageStatus messagestatus;
+  private MessageStatus messageStatus;
   private boolean deleted;
 }

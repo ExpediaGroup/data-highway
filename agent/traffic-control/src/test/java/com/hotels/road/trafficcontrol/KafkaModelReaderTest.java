@@ -47,7 +47,7 @@ public class KafkaModelReaderTest {
                 + "    \"replicationFactor\": 3,\n"
                 + "    \"message\": \"\"\n"
                 + "  },\n"
-                + "  \"messagestatus\": {\n"
+                + "  \"messageStatus\": {\n"
                 + "    \"lastUpdated\": 124947,\n"
                 + "    \"numberOfMessages\": 30\n"
                 + "  },\n"
@@ -75,7 +75,7 @@ public class KafkaModelReaderTest {
                 + "  \"topicName\": \"road.test_topic6\",\n"
                 + "  \"type\":\"COMPACT\",\n"
                 + "  \"status\": null,\n"
-                + "  \"messagestatus\": null,\n"
+                + "  \"messageStatus\": null,\n"
                 + "  \"deleted\": true\n"
                 + "}");
     KafkaRoad road = reader.read(json);

@@ -261,9 +261,9 @@ public class PaverServiceImpl implements PaverService {
 
   private boolean hasNoMessages(Road road) {
     if(!road.isEnabled()) {
-      MessageStatus messagestatus = road.getMessagestatus();
-      if(messagestatus != null && messagestatus.getNumberOfMessages() == 0
-        && road.getEnabledTimeStamp() < messagestatus.getLastUpdated()) {
+      MessageStatus messageStatus = road.getMessageStatus();
+      if(messageStatus != null && messageStatus.getNumberOfMessages() == 0
+        && road.getEnabledTimeStamp() < messageStatus.getLastUpdated()) {
         return true;
       }
     }
