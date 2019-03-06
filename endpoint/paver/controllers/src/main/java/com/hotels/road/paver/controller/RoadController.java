@@ -70,7 +70,6 @@ public class RoadController {
   @PreAuthorize("@paverAuthorisation.isAuthorised(authentication)")
   @PostMapping
   public StandardResponse createRoad(@RequestBody BasicRoadModel road) {
-    //TODO: Do we allow road creation with same name as deleted Road even when they are not yet deleted from Model?
     service.createRoad(road);
     return StandardResponse.successResponse(String.format("Request to create road \"%s\" received", road.getName()));
   }
