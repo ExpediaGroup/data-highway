@@ -182,7 +182,11 @@ public class TollboothSchemaStoreClient implements SchemaStoreClient {
   }
 
   private Road getRoad(String name) throws UnknownRoadException {
-    return Optional.ofNullable(store.get(name)).orElseThrow(() -> new UnknownRoadException(name));
+    Road road = store.get(name);
+    if(road == null || road.isDeleted()) {
+      road = null;
+    }
+    return Optional.ofNullable(road).orElseThrow(() -> new UnknownRoadException(name));
   }
 
   private static <T> BinaryOperator<T> duplicateVersionChecker() {

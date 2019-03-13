@@ -100,7 +100,8 @@ public class TollBoothHiveDestinationAdminClient implements HiveDestinationAdmin
   }
 
   private Road road(String name) throws UnknownRoadException {
-    return Optional.ofNullable(roads.get(name)).orElseThrow(() -> new UnknownRoadException(name));
+    return Optional.ofNullable(roads.get(name)).filter(r -> !r.isDeleted())
+      .orElseThrow(() -> new UnknownRoadException(name));
   }
 
   private Optional<Map<String, Destination>> destinations(String name) throws UnknownRoadException {

@@ -15,7 +15,6 @@
  */
 package com.hotels.road.offramp.socket;
 
-import java.time.Clock;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -33,10 +32,13 @@ import com.hotels.road.model.core.Road;
 import com.hotels.road.offramp.api.SchemaProvider;
 import com.hotels.road.offramp.model.Event;
 import com.hotels.road.pii.PiiReplacerConfiguration;
+import com.hotels.road.rest.controller.common.CommonClockConfiguration;
 import com.hotels.road.schema.serde.SchemaSerializationModule;
 
 @Configuration
-@Import(PiiReplacerConfiguration.class)
+@Import({
+    PiiReplacerConfiguration.class,
+    CommonClockConfiguration.class })
 public class OfframpConfiguration {
   @Bean
   public ObjectMapper jsonMapper() {
@@ -52,10 +54,5 @@ public class OfframpConfiguration {
   @Bean
   public SchemaProvider schemaProvider(@Value("#{store}") Map<String, Road> store) {
     return new SchemaProvider(store);
-  }
-
-  @Bean
-  public Clock clock() {
-    return Clock.systemUTC();
   }
 }

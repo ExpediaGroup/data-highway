@@ -17,11 +17,15 @@ package com.hotels.road.trafficcontrol.it;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.boot.Banner.Mode.OFF;
 
 import static com.google.common.base.Charsets.UTF_8;
+
+import static com.hotels.road.tollbooth.client.api.Operation.ADD;
+import static com.hotels.road.tollbooth.client.api.Operation.REMOVE;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -44,11 +48,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import kafka.admin.AdminUtils;
-import kafka.server.ConfigType;
-import kafka.utils.ZkUtils;
-import lombok.extern.slf4j.Slf4j;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +68,11 @@ import com.hotels.road.trafficcontrol.TrafficControl;
 import com.hotels.road.trafficcontrol.TrafficControlApp;
 import com.hotels.road.trafficcontrol.model.KafkaRoad;
 import com.hotels.road.trafficcontrol.model.TrafficControlStatus;
+
+import kafka.admin.AdminUtils;
+import kafka.server.ConfigType;
+import kafka.utils.ZkUtils;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -186,7 +190,7 @@ public class TrafficControlIntegrationTest {
 
   @Test(timeout = 20000)
   public void inspect_creates_topic_if_missing() throws Exception {
-    KafkaRoad model = new KafkaRoad("test", "test_topic3", RoadType.NORMAL, new TrafficControlStatus(true, 6, 1, ""));
+    KafkaRoad model = new KafkaRoad("test", "test_topic3", RoadType.NORMAL, new TrafficControlStatus(true, 6, 1, ""), null, false);
 
     context.getBean(TrafficControl.class).inspectModel("test", model);
 
@@ -241,7 +245,7 @@ public class TrafficControlIntegrationTest {
 
   @Test
   public void compact_road_created_correctly() throws Exception {
-    KafkaRoad model = new KafkaRoad("test_topic6", "road.test_topic6", RoadType.COMPACT, null);
+    KafkaRoad model = new KafkaRoad("test_topic6", "road.test_topic6", RoadType.COMPACT, null, null, false);
 
     context.getBean(TrafficControl.class).newModel("test_topic6", model);
 
@@ -250,6 +254,35 @@ public class TrafficControlIntegrationTest {
     zkUtils.close();
 
     assertThat(config.getProperty(TopicConfig.CLEANUP_POLICY_CONFIG), is(TopicConfig.CLEANUP_POLICY_COMPACT));
+  }
+
+  @Test(timeout = 20000)
+  public void inspect_messageStatus() throws Exception {
+    KafkaRoad model = new KafkaRoad("test", "test_topic3", RoadType.NORMAL, new TrafficControlStatus(true, 6, 1, ""), null, false);
+    context.getBean(TrafficControl.class).inspectModel("test", model);
+    final List<PatchOperation> patchOperations = context.getBean(KafkaAdminClient.class).updateMessageStatus(model);
+    assertThat(patchOperations.size(), is(1));
+    assertThat(patchOperations.get(0).getOperation(), is(ADD));
+    assertThat(patchOperations.get(0).getPath(), is("/messageStatus"));
+  }
+
+  @Test(timeout = 20000)
+  public void inspect_delete_topic() throws Exception {
+    KafkaRoad model = new KafkaRoad("testdelete", "test_topic4", RoadType.NORMAL, new TrafficControlStatus(true, 6, 1, ""), null, false);
+    context.getBean(TrafficControl.class).inspectModel("testdelete", model);
+    model = new KafkaRoad("testdelete", "test_topic4", RoadType.NORMAL, new TrafficControlStatus(true, 6, 1, ""), null, true);
+    context.getBean(TrafficControl.class).inspectModel("testdelete", model);
+    Thread.sleep(1000);
+    assertFalse(context.getBean(KafkaAdminClient.class).topicExists("test_topic4"));
+  }
+
+  @Test(timeout = 20000)
+  public void inspect_delete_topic_patch_operation() throws Exception {
+    KafkaRoad model = new KafkaRoad("test", "test_topic3", RoadType.NORMAL, new TrafficControlStatus(true, 6, 1, ""), null, true);
+    final List<PatchOperation> patchOperations = context.getBean(TrafficControl.class).inspectModel("test", model);
+    assertThat(patchOperations.size(), is(1));
+    assertThat(patchOperations.get(0).getOperation(), is(REMOVE));
+    assertThat(patchOperations.get(0).getPath(), is(""));
   }
 
   private KafkaConsumer<String, String> createPatchTopicConsumer() {

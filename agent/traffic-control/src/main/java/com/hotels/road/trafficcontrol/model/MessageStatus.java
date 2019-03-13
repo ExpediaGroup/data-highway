@@ -15,18 +15,10 @@
  */
 package com.hotels.road.trafficcontrol.model;
 
-import com.hotels.road.rest.model.RoadType;
-
 import lombok.Value;
-import lombok.experimental.Wither;
 
 @Value
-public class KafkaRoad {
-  String name;
-  @Wither
-  String topicName;
-  RoadType type;
-  TrafficControlStatus status;
-  MessageStatus messageStatus;
-  boolean deleted;
+public class MessageStatus {
+  long lastUpdated;
+  long numberOfMessages;
 }

@@ -52,4 +52,6 @@ public interface PaverService {
   void applyPatch(String name, List<PatchOperation> patchSet) throws UnknownRoadException;
 
   void deleteSchemaVersion(String name, int version) throws UnknownRoadException;
+
+  void deleteRoad(String name) throws UnknownRoadException;
 }

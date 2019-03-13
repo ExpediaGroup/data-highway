@@ -4,9 +4,10 @@
 periodically inspects road models to determine if any action needs to be taken.
 
 Specifically, it ensures that a [Kafka](https://kafka.apache.org/) topic exists for all roads. It then updates the
-model with the current status of whether the `topicExists`, the number of `partitions` and the `replicationFactor`.
+model with the current status of whether the `topicExists`, the number of `partitions`, the `replicationFactor` and 
+`numberOfMessages` for each topic.
 
-The agent reads from `/topic` and reads from and writes to `/status` in the model. Below is an example of the model
+The agent reads from `/topic` and reads from and writes to `/status` and `messageStatus` in the model. Below is an example of the model
 subset that the agent uses with example values:
 
 ```
@@ -17,7 +18,11 @@ subset that the agent uses with example values:
     "partitions": 6,
     "replicationFactor": 3,
     "message": "Error creating Kafka topic \"exceptionMessage\""
-  }
+  },
+  "messageStatus": {
+      "lastUpdated": 15032459590,
+      "numberOfMessages": 60000
+    }
 }
 ```
 
@@ -25,19 +30,21 @@ subset that the agent uses with example values:
 
 All arguments without a default are mandatory.
 
-| Argument                          | Default              | Description
-|---                                |---                   |---
-| `kafka.zookeeper`                 | -                    | Connection string for Zookeeper to allow creation of Kafka topics. In Kubernetes, a typical value would be `zookeeper:2181`. It should be the same value as used to configure the Kafka brokers.
-| `kafka.sessionTimeout`            | 60000 (milliseconds) | Zookeeper connection option.
-| `kafka.connectionTimeout`         | 60000 (milliseconds) | Zookeeper connection option.
-| `kafka.zkSecurityEnabled`         | false                | Zookeeper connection option.
-| `kafka.bootstrapServers`          | -                    | Connection string for Kafka to allow reading of models and writing modifications. In Kubernetes, a typical value would be `kafka:9092`.
-| `kafka.store.topic`               | -                    | Kafka topic for reading models.
-| `kafka.modification.topic`        | -	                   | Kafka topic for sending modifications.
-| `kafka.default.topicConfig`       | -                    | Additional properties to assign to Kakfa topics on creation.
-| `kafka.default.partitions`        | 6                    | The number of partitions to create Kafka topics with.
-| `kafka.default.replicationFactor` | 3                    | The replication factor to create Kafka topics with.
-| `graphite.endpoint`               | disabled             | Graphite host and port for sending metrics. Disabled by default.
+| Argument                            | Default                | Description
+|---                                  |---                     |---
+| `kafka.zookeeper`                   | -                      | Connection string for Zookeeper to allow creation of Kafka topics. In Kubernetes, a typical value would be `zookeeper:2181`. It should be the same value as used to configure the Kafka brokers.
+| `kafka.sessionTimeout`              | 60000 (milliseconds)   | Zookeeper connection option.
+| `kafka.connectionTimeout`           | 60000 (milliseconds)   | Zookeeper connection option.
+| `messageStatus.initialdelayMs`      | 3600000 (milliseconds) | Initial Delay in updating messagestatus in model on boot up.
+| `messageStatus.fixedrateMs`         | 3600000 (milliseconds) | Schedule for updating messagestatus in model
+| `kafka.zkSecurityEnabled`           | false                  | Zookeeper connection option.
+| `kafka.bootstrapServers`            | -                      | Connection string for Kafka to allow reading of models and writing modifications. In Kubernetes, a typical value would be `kafka:9092`.
+| `kafka.store.topic`                 | -                      | Kafka topic for reading models.
+| `kafka.modification.topic`          | -	                   | Kafka topic for sending modifications.
+| `kafka.default.topicConfig`         | -                      | Additional properties to assign to Kakfa topics on creation.
+| `kafka.default.partitions`          | 6                      | The number of partitions to create Kafka topics with.
+| `kafka.default.replicationFactor`   | 3                      | The replication factor to create Kafka topics with.
+| `graphite.endpoint`                 | disabled               | Graphite host and port for sending metrics. Disabled by default.
 
 ## Rest Endpoint
 

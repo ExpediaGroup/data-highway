@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.road.trafficcontrol.model;
+package com.hotels.road.model.core;
 
-import com.hotels.road.rest.model.RoadType;
+import lombok.Data;
 
-import lombok.Value;
-import lombok.experimental.Wither;
-
-@Value
-public class KafkaRoad {
-  String name;
-  @Wither
-  String topicName;
-  RoadType type;
-  TrafficControlStatus status;
-  MessageStatus messageStatus;
-  boolean deleted;
+@Data
+public class MessageStatus {
+  private long lastUpdated;
+  private long numberOfMessages;
 }

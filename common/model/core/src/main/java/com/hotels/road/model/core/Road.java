@@ -18,11 +18,11 @@ package com.hotels.road.model.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.Data;
-
 import com.hotels.road.rest.model.Authorisation;
 import com.hotels.road.rest.model.RoadType;
 import com.hotels.road.schema.chronology.SchemaCompatibility;
+
+import lombok.Data;
 
 @Data
 public class Road {
@@ -34,12 +34,14 @@ public class Road {
   private String teamName;
   private String contactEmail;
   private boolean enabled;
+  private long enabledTimeStamp;
   private String partitionPath;
   private Authorisation authorisation;
   private Map<String, String> metadata = new HashMap<>();
   private Map<Integer, SchemaVersion> schemas = new HashMap<>();
   private Map<String, Destination> destinations = new HashMap<>();
-
   private KafkaStatus status;
   private String compatibilityMode = DEFAULT_COMPATIBILITY_MODE;
+  private MessageStatus messageStatus;
+  private boolean deleted;
 }

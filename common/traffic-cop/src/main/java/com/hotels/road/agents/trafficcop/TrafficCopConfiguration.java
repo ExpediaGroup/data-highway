@@ -18,6 +18,7 @@ package com.hotels.road.agents.trafficcop;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableMap;
 
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,4 +71,5 @@ public class TrafficCopConfiguration {
 
     return new KafkaPatchSetEmitter(topic, kafkaProducer, mapper);
   }
+
 }

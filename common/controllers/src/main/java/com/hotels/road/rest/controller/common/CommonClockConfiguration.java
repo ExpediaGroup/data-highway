@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.road.trafficcontrol.model;
+package com.hotels.road.rest.controller.common;
 
-import com.hotels.road.rest.model.RoadType;
+import java.time.Clock;
 
-import lombok.Value;
-import lombok.experimental.Wither;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Value
-public class KafkaRoad {
-  String name;
-  @Wither
-  String topicName;
-  RoadType type;
-  TrafficControlStatus status;
-  MessageStatus messageStatus;
-  boolean deleted;
+@Configuration
+public class CommonClockConfiguration {
+  @Bean
+  public Clock clock() {
+    return Clock.systemUTC();
+  }
 }

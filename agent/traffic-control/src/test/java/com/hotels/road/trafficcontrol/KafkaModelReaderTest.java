@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.hotels.road.rest.model.RoadType;
 import com.hotels.road.trafficcontrol.model.KafkaRoad;
+import com.hotels.road.trafficcontrol.model.MessageStatus;
 import com.hotels.road.trafficcontrol.model.TrafficControlStatus;
 
 public class KafkaModelReaderTest {
@@ -45,7 +46,12 @@ public class KafkaModelReaderTest {
                 + "    \"partitions\": 6,\n"
                 + "    \"replicationFactor\": 3,\n"
                 + "    \"message\": \"\"\n"
-                + "  }\n"
+                + "  },\n"
+                + "  \"messageStatus\": {\n"
+                + "    \"lastUpdated\": 124947,\n"
+                + "    \"numberOfMessages\": 30\n"
+                + "  },\n"
+                + "  \"deleted\": false\n"
                 + "}");
     KafkaRoad road = reader.read(json);
 
@@ -56,7 +62,8 @@ public class KafkaModelReaderTest {
                 "test_topic6",
                 "road.test_topic6",
                 RoadType.COMPACT,
-                new TrafficControlStatus(true, 6, 3, ""))));
+                new TrafficControlStatus(true, 6, 3, ""),
+                new MessageStatus(124947, 30), false)));
   }
 
   @Test
@@ -67,10 +74,12 @@ public class KafkaModelReaderTest {
                 + "  \"name\": \"test_topic6\",\n"
                 + "  \"topicName\": \"road.test_topic6\",\n"
                 + "  \"type\":\"COMPACT\",\n"
-                + "  \"status\": null\n"
+                + "  \"status\": null,\n"
+                + "  \"messageStatus\": null,\n"
+                + "  \"deleted\": true\n"
                 + "}");
     KafkaRoad road = reader.read(json);
 
-    assertThat(road, is(new KafkaRoad("test_topic6", "road.test_topic6", RoadType.COMPACT, null)));
+    assertThat(road, is(new KafkaRoad("test_topic6", "road.test_topic6", RoadType.COMPACT, null, null, true)));
   }
 }

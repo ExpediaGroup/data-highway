@@ -28,15 +28,15 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import lombok.extern.slf4j.Slf4j;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
 import com.hotels.road.model.core.Road;
 import com.hotels.road.offramp.api.Record;
 import com.hotels.road.security.RoadWebSecurityConfigurerAdapter;
 import com.hotels.road.testdrive.MemoryRoadConsumer.StreamKey;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Slf4j
 @EnableSwagger2

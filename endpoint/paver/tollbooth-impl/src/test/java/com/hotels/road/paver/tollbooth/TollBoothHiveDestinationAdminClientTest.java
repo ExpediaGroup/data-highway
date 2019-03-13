@@ -163,7 +163,6 @@ public class TollBoothHiveDestinationAdminClientTest {
   @Test(expected = UnknownDestinationException.class)
   public void updateHiveDestination_UnknownDestination() throws Exception {
     store.put(NAME, road);
-
     underTest.updateHiveDestination(NAME, hiveDestination);
   }
 
@@ -186,7 +185,34 @@ public class TollBoothHiveDestinationAdminClientTest {
   @Test(expected = UnknownDestinationException.class)
   public void deleteHiveDestination_UnknownDestination() throws Exception {
     store.put(NAME, road);
-
     underTest.deleteHiveDestination(NAME);
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void deleteHiveDestination_deletedRoad() throws Exception {
+    road.setDeleted(true);
+    store.put(NAME, road);
+    underTest.deleteHiveDestination(NAME);
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void updateHiveDestination_deletedRoad() throws Exception {
+    road.setDeleted(true);
+    store.put(NAME, road);
+    underTest.updateHiveDestination(NAME,hiveDestination);
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void getHiveDestination_deletedRoad() throws Exception {
+    road.setDeleted(true);
+    store.put(NAME, road);
+    underTest.getHiveDestination(NAME);
+  }
+
+  @Test(expected = UnknownRoadException.class)
+  public void createHiveDestination_deletedRoad() throws Exception {
+    road.setDeleted(true);
+    store.put(NAME, road);
+    underTest.createHiveDestination(NAME, hiveDestination);
   }
 }

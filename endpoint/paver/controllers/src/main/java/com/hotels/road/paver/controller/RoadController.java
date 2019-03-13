@@ -23,6 +23,7 @@ import java.util.SortedSet;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,19 +32,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import lombok.RequiredArgsConstructor;
-
 import com.hotels.road.exception.UnknownRoadException;
 import com.hotels.road.paver.service.PaverService;
 import com.hotels.road.rest.model.BasicRoadModel;
 import com.hotels.road.rest.model.RoadModel;
 import com.hotels.road.rest.model.StandardResponse;
 import com.hotels.road.tollbooth.client.api.PatchOperation;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import lombok.RequiredArgsConstructor;
 
 @Api(tags = "road")
 @RestController
@@ -98,5 +99,19 @@ public class RoadController {
     throws UnknownRoadException {
     service.applyPatch(name, patchSet);
     return StandardResponse.successResponse("Patch applied");
+  }
+
+  @ApiOperation(value = "Deletes a road")
+  @ApiResponses({
+      @ApiResponse(code = 200, message = "Delete a road returned successfully.", response = StandardResponse.class),
+      @ApiResponse(code = 400, message = "Invalid request or road name.", response = StandardResponse.class),
+      @ApiResponse(code = 404, message = "Road not found.", response = StandardResponse.class) })
+  @PreAuthorize("@paverAuthorisation.isAuthorised(authentication)")
+  @DeleteMapping("/{name}")
+  public StandardResponse delete(@ApiParam(name = "name", value = "road name", required = true) @PathVariable String name)
+    throws UnknownRoadException {
+    service.deleteRoad(name);
+    return StandardResponse
+        .successResponse(String.format("Request to delete Road for \"%s\" received.", name));
   }
 }
