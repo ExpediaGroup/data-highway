@@ -16,6 +16,7 @@
 package com.hotels.road.paver.service.patchmapping;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Predicates.not;
 
 import java.util.Map;
 
@@ -47,7 +48,13 @@ public class PartitionPathPatchMapping extends PatchMapping {
 
     Path path = KeyPathParser.parse((String) modelOperation.getValue());
     Map<Integer, SchemaVersion> schemas = road.getSchemas();
-    Integer latestSchemaVersion = schemas.keySet().stream().max(Integer::compareTo).orElse(null);
+    Integer latestSchemaVersion = schemas
+        .values()
+        .stream()
+        .filter(not(SchemaVersion::isDeleted))
+        .map(SchemaVersion::getVersion)
+        .max(Integer::compareTo)
+        .orElse(null);
     if (latestSchemaVersion != null) {
       try {
         new KeyPathValidator(path, schemas.get(latestSchemaVersion).getSchema()).validate();

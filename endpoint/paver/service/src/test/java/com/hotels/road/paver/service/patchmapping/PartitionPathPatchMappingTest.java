@@ -42,8 +42,15 @@ public class PartitionPathPatchMappingTest extends AbstractPatchMappingTest {
         .requiredString("foo")
         .nullableString("bar", "DEFAULT")
         .endRecord();
+    Schema schema3 = SchemaBuilder
+        .record("a")
+        .fields()
+        .requiredString("foo")
+        .nullableString("bar", "DEFAULT")
+        .nullableString("maz", "DEFAULT")
+        .endRecord();
     Map<Integer, SchemaVersion> schemas = ImmutableMap.of(1, new SchemaVersion(schema1, 1, false), 2,
-        new SchemaVersion(schema2, 2, false));
+        new SchemaVersion(schema2, 2, false), 3, new SchemaVersion(schema3, 3, true ));
     road.setSchemas(schemas);
   }
 
