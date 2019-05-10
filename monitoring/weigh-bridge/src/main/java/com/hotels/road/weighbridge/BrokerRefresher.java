@@ -62,6 +62,7 @@ public class BrokerRefresher implements ApplicationRunner, AutoCloseable {
         .map(x -> brokerSupplier.get())
         .doOnNext(broker -> map.put(broker.getId(), broker))
         .doOnNext(metrics::update)
+        .retry()
         .subscribe(brokerReference::set));
   }
 

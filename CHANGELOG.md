@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Changed
+- Weigh-bridge: Added missing `hazelcast-kubernetes` dependency.
+- Weigh-bridge: Retry `BrokerRefresher` in case of exception talking to the Kafka API.
+
+## [6.0.7] - 2019-04-01
+### Changed
 - Paver: validate only against non-deleted schemas when updating the partitiion path.
 
 ## [6.0.6] - 2019-02-12
@@ -22,7 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Switch from Redis to Hazelcast for session storage.
 - KafkaOffsetMetrics: switch to micrometer from prometheus API.
 
-## [6.0.4]
+## [6.0.4] - 2019-01-31
 ### Added
 - Onramp: Messages per request metric.
 - New CLI Offramp client tool
