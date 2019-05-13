@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [6.0.8] - 2019-05-13
 ### Changed
 - Weigh-bridge: Added missing `hazelcast-kubernetes` dependency.
 - Weigh-bridge: Retry `BrokerRefresher` in case of exception talking to the Kafka API.
