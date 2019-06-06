@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.0.9] - TBD
+### Changed
+- Updated `hotels-oss-parent` to version 4.0.1 (was 2.3.1).
+
 ## [6.0.8] - 2019-05-13
 ### Changed
 - Weigh-bridge: Added missing `hazelcast-kubernetes` dependency.
