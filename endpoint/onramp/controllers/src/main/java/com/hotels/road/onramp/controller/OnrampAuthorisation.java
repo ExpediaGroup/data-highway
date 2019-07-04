@@ -117,7 +117,7 @@ public class OnrampAuthorisation {
     WebAuthenticationDetails details = (WebAuthenticationDetails) authentication.getDetails();
     boolean result = cidrBlockAuthorisation.isAuthorised(cidrBlocks, details.getRemoteAddress());
 
-    log.debug("CIDR Authorisation for road {}: authorised: {}", roadName, result);
+    log.debug("CIDR Authorisation for road: {}, authorised: {}, remoteAddress: {}", roadName, result, details.getRemoteAddress());
     return result ? AUTHORISED : UNAUTHORISED;
   }
 }

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Changed
+- Onramp: Log remote address for CIDR Authorisation.
+
 ## [6.0.9] - TBD
 ### Changed
 - Updated `hotels-oss-parent` to version 4.0.1 (was 2.3.1).
