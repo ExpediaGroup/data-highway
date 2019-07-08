@@ -16,33 +16,30 @@
 package com.hotels.road.weighbridge.function;
 
 import java.io.File;
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.stereotype.Component;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import com.hotels.road.weighbridge.function.ReplicaByPartitionFunction.Replica;
 
 @Component
 public class SizeByPartitionFunction {
-  public Map<TopicPartition, Long> apply(Map<TopicPartition, Replica> partitionsAndLogDir) {
-    return Flux
-        .fromIterable(partitionsAndLogDir.entrySet())
-        .collectMap(Entry::getKey,
-            entry -> Mono
-                .just(entry)
-                .map(e -> new File(e.getValue().getLogDir(), e.getKey().toString()))
-                .flatMap(f -> Mono.justOrEmpty(f.listFiles()))
-                .flatMapIterable(Arrays::asList)
-                .map(File::length)
-                .reduce(0L, Long::sum)
-                .blockOptional()
-                .orElse(0L))
-        .block();
+  public Map<TopicPartition, Long> apply(Map<TopicPartition, Replica> partitionsAndLogDir) throws IOException {
+    Map<TopicPartition, Long> result = new HashMap<>();
+    for (Map.Entry<TopicPartition, Replica> entry : partitionsAndLogDir.entrySet()) {
+      TopicPartition topicPartition = entry.getKey();
+      Replica replica = entry.getValue();
+
+      Path path = new File(replica.getLogDir(), topicPartition.toString()).toPath();
+      long size = Files.walk(path).mapToLong( p -> p.toFile().length() ).sum();
+
+      result.put(topicPartition, size);
+    }
+    return result;
   }
 }

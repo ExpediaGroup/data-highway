@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.core.HazelcastInstance;
 
 import com.hotels.road.boot.DataHighwayApplication;
@@ -63,11 +62,6 @@ public class WeighBridgeApp {
   public Map<Integer, Broker> map(@Autowired HazelcastInstance hazelcastInstance,
                                   @Value("${cache.map:broker}") String mapName) {
     return hazelcastInstance.getMap(mapName);
-  }
-
-  @Bean
-  public ObjectMapper objectMapper() {
-    return new ObjectMapper();
   }
 
   public static void main(String[] args) {

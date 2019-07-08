@@ -36,7 +36,8 @@ public class HostPredicate implements Predicate<String> {
 
   @SneakyThrows(UnknownHostException.class)
   private static String host() {
-    log.info("Running on host '{}'.", HOST);
-    return InetAddress.getLocalHost().getHostAddress();
+    String host = InetAddress.getLocalHost().getHostAddress();
+    log.info("Running on host '{}'.", host);
+    return host;
   }
 }

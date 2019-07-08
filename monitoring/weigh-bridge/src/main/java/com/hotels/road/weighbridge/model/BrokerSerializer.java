@@ -17,19 +17,19 @@ package com.hotels.road.weighbridge.model;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
 
-@Component
 public class BrokerSerializer implements StreamSerializer<Broker> {
+  private static final ObjectMapper objectMapper;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  static {
+    objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+  }
 
   @Override
   public void write(ObjectDataOutput out, Broker broker) throws IOException {
@@ -39,9 +39,8 @@ public class BrokerSerializer implements StreamSerializer<Broker> {
 
   @Override
   public Broker read(ObjectDataInput in) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
     final byte[] src = in.readByteArray();
-    return mapper.readValue(src, Broker.class);
+    return objectMapper.readValue(src, Broker.class);
   }
 
   @Override

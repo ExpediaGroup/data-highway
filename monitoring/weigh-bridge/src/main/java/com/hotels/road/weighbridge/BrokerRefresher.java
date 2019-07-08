@@ -15,8 +15,13 @@
  */
 package com.hotels.road.weighbridge;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -24,22 +29,22 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.hotels.road.weighbridge.model.Broker;
 
-import reactor.core.Disposable;
-import reactor.core.Disposables;
-import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
-
 @Component
+@Slf4j
 public class BrokerRefresher implements ApplicationRunner, AutoCloseable {
 
   private final Duration refreshPeriod;
   private final BrokerSupplier brokerSupplier;
   private final WeighBridgeMetrics metrics;
   private final AtomicReference<Broker> brokerReference;
-  private final Disposable.Swap disposabe = Disposables.swap();
   private final Map<Integer, Broker> map;
+
+  private final ScheduledExecutorService executor;
+  private ScheduledFuture<?> scheduledFuture;
 
   public BrokerRefresher(
       @Value("${refreshPeriod:PT10S}") Duration refreshPeriod,
@@ -52,22 +57,31 @@ public class BrokerRefresher implements ApplicationRunner, AutoCloseable {
     this.metrics = metrics;
     this.brokerReference = brokerReference;
     this.map = map;
+
+    executor = Executors.newSingleThreadScheduledExecutor();
   }
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
-    disposabe.update(Flux
-        .interval(Duration.ZERO, refreshPeriod)
-        .subscribeOn(Schedulers.single())
-        .map(x -> brokerSupplier.get())
-        .doOnNext(broker -> map.put(broker.getId(), broker))
-        .doOnNext(metrics::update)
-        .retry()
-        .subscribe(brokerReference::set));
+    scheduledFuture = executor.scheduleAtFixedRate(this::updateMetadata, 0, refreshPeriod.toMillis(), MILLISECONDS);
+  }
+
+  private void updateMetadata() {
+    try {
+      Broker broker = brokerSupplier.get();
+      map.put(broker.getId(), broker);
+      metrics.update(broker);
+      brokerReference.set(broker);
+    } catch (Throwable t) {
+      log.info("Problem updating broker metadata", t);
+    }
   }
 
   @Override
   public void close() throws Exception {
-    disposabe.dispose();
+    if (scheduledFuture != null) {
+      scheduledFuture.cancel(true);
+    }
+    executor.shutdown();
   }
 }

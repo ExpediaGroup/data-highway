@@ -15,16 +15,22 @@
  */
 package com.hotels.road.weighbridge.function;
 
+import static java.util.Optional.ofNullable;
+
+import static com.google.common.collect.Iterables.find;
+
+import java.util.Collection;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.common.Node;
 import org.springframework.stereotype.Component;
 
-import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
@@ -32,23 +38,22 @@ import reactor.core.publisher.Mono;
 public class BrokerNodeFunction {
   private final AdminClient client;
 
-  public BrokerNode apply(Predicate<String> hostPredicate) {
-    return Mono
-        .fromSupplier(() -> client.describeCluster().nodes())
-        .flatMapIterable(f -> KafkaFutures.join(f))
-        .doOnNext(n -> log.debug("Found broker on host '{}'.", n.host()))
-        .filter(n -> hostPredicate.test(n.host()))
-        .next()
-        .map(n -> new BrokerNode(n.id(), n.rack() == null ? "none" : n.rack(), n.host()))
-        .doOnNext(b -> log.debug("Using broker {}.", b))
-        .blockOptional()
-        .orElseThrow(() -> new RuntimeException("No broker found on localhost!"));
+  public BrokerNode apply(Predicate<String> hostNamePredicate) {
+    Collection<Node> nodes = KafkaFutures.join(client.describeCluster().nodes());
+
+    try {
+      Node node = find(nodes, n -> hostNamePredicate.test(n.host()));
+      log.debug("Using broker {}", node);
+      return new BrokerNode(node.id(), ofNullable(node.rack()).orElse("none"), node.host());
+    } catch (NoSuchElementException e) {
+      throw new RuntimeException("No broker found on localhost!");
+    }
   }
 
-  @Data
+  @Value
   public static class BrokerNode {
-    private final int id;
-    private final @NonNull String rack;
-    private final @NonNull String host;
+    int id;
+    @NonNull String rack;
+    @NonNull String host;
   }
 }

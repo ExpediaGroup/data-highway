@@ -33,7 +33,6 @@ import java.util.function.Supplier;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
 import reactor.util.function.Tuple3;
@@ -57,10 +56,7 @@ import com.hotels.road.weighbridge.model.PartitionReplica;
 import com.hotels.road.weighbridge.model.Topic;
 
 @Component
-@RequiredArgsConstructor
 public class BrokerSupplier implements Supplier<Broker> {
-  private final Predicate<String> hostPredicate;
-  private final BrokerNodeFunction brokerNodeFunction;
   private final ReplicaByPartitionFunction replicaByPartitionFunction;
   private final LeaderInSyncByPartitionFunction leaderInSyncByPartitionFunction;
   private final RetentionByTopicFunction retentionByTopicFunction;
@@ -68,9 +64,29 @@ public class BrokerSupplier implements Supplier<Broker> {
   private final SizeByPartitionFunction sizeByPartitionFunction;
   private final DiskByLogDirFunction diskByLogDirFunction;
 
+  private final BrokerNode brokerNode;
+
+  public BrokerSupplier(
+      Predicate<String> hostPredicate,
+      BrokerNodeFunction brokerNodeFunction,
+      ReplicaByPartitionFunction replicaByPartitionFunction,
+      LeaderInSyncByPartitionFunction leaderInSyncByPartitionFunction,
+      RetentionByTopicFunction retentionByTopicFunction,
+      OffsetsByPartitionFunction offsetsByPartitionFunction,
+      SizeByPartitionFunction sizeByPartitionFunction,
+      DiskByLogDirFunction diskByLogDirFunction) {
+    this.replicaByPartitionFunction = replicaByPartitionFunction;
+    this.leaderInSyncByPartitionFunction = leaderInSyncByPartitionFunction;
+    this.retentionByTopicFunction = retentionByTopicFunction;
+    this.offsetsByPartitionFunction = offsetsByPartitionFunction;
+    this.sizeByPartitionFunction = sizeByPartitionFunction;
+    this.diskByLogDirFunction = diskByLogDirFunction;
+
+    brokerNode = brokerNodeFunction.apply(hostPredicate);
+  }
+
   @Override
   public Broker get() {
-    BrokerNode brokerNode = brokerNodeFunction.apply(hostPredicate);
     Map<TopicPartition, Replica> replicaByPartition = replicaByPartitionFunction.apply(brokerNode.getId());
 
     Set<TopicPartition> partitions = replicaByPartition.keySet();
@@ -87,16 +103,21 @@ public class BrokerSupplier implements Supplier<Broker> {
         .fromIterable(partitions)
         .map(p -> replica(replicaByPartition, offsetsByPartition, leaderInSyncByPartition, sizeByPartition, p))
         .groupBy(Tuple3::getT1)
-        .flatMap(byLogDir -> byLogDir
-            .sort(comparing(Tuple3::getT2))
-            .windowUntil(keyChanged(Tuple3::getT2), true)
-            .flatMap(byTopic -> byTopic
-                .collectMultimap(Tuple3::getT2, Tuple3::getT3)
-                .flatMapIterable(Map::entrySet)
-                .map(e -> new Topic(e.getKey(), retentionByTopic.getOrDefault(e.getKey(), ZERO),
-                    newArrayList(e.getValue()))))
-            .collectList()
-            .map(ts -> logDir(diskByLogDir, byLogDir, ts)))
+        .flatMap(
+            byLogDir -> byLogDir
+                .sort(comparing(Tuple3::getT2))
+                .windowUntil(keyChanged(Tuple3::getT2), true)
+                .flatMap(
+                    byTopic -> byTopic
+                        .collectMultimap(Tuple3::getT2, Tuple3::getT3)
+                        .flatMapIterable(Map::entrySet)
+                        .map(
+                            e -> new Topic(
+                                e.getKey(),
+                                retentionByTopic.getOrDefault(e.getKey(), ZERO),
+                                newArrayList(e.getValue()))))
+                .collectList()
+                .map(ts -> logDir(diskByLogDir, byLogDir, ts)))
         .collectList()
         .map(lds -> new Broker(brokerNode.getId(), brokerNode.getRack(), lds))
         .block();
@@ -111,9 +132,15 @@ public class BrokerSupplier implements Supplier<Broker> {
     LeaderInSync leaderInSync = leaderInSyncByPartition.getOrDefault(p, new LeaderInSync(false, false));
     Offsets offsets = offsetsByPartition.getOrDefault(p, new Offsets(0L, 0L));
     Replica replica = replicaByPartition.getOrDefault(p, new Replica("", 0L));
-    PartitionReplica partitionReplica = new PartitionReplica(p.partition(), leaderInSync.isLeader(),
-        leaderInSync.isInSync(), sizeByPartition.getOrDefault(p, 0L), replica.getSize(), offsets.getBeginning(),
-        offsets.getEnd(), offsets.getCount());
+    PartitionReplica partitionReplica = new PartitionReplica(
+        p.partition(),
+        leaderInSync.isLeader(),
+        leaderInSync.isInSync(),
+        sizeByPartition.getOrDefault(p, 0L),
+        replica.getSize(),
+        offsets.getBeginning(),
+        offsets.getEnd(),
+        offsets.getCount());
     return Tuples.of(replica.getLogDir(), p.topic(), partitionReplica);
   }
 
