@@ -17,6 +17,7 @@ package com.hotels.road.weighbridge.function;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -29,16 +30,19 @@ import com.hotels.road.weighbridge.function.ReplicaByPartitionFunction.Replica;
 
 @Component
 public class SizeByPartitionFunction {
-  public Map<TopicPartition, Long> apply(Map<TopicPartition, Replica> partitionsAndLogDir) throws IOException {
+  public Map<TopicPartition, Long> apply(Map<TopicPartition, Replica> partitionsAndLogDir) {
     Map<TopicPartition, Long> result = new HashMap<>();
     for (Map.Entry<TopicPartition, Replica> entry : partitionsAndLogDir.entrySet()) {
       TopicPartition topicPartition = entry.getKey();
       Replica replica = entry.getValue();
 
       Path path = new File(replica.getLogDir(), topicPartition.toString()).toPath();
-      long size = Files.walk(path).mapToLong( p -> p.toFile().length() ).sum();
-
-      result.put(topicPartition, size);
+      try {
+        long size = Files.walk(path).filter(Files::isRegularFile).mapToLong(p -> p.toFile().length()).sum();
+        result.put(topicPartition, size);
+      } catch (IOException e) {
+        throw new UncheckedIOException("Unable to determine size of " + path, e);
+      }
     }
     return result;
   }

@@ -24,6 +24,7 @@ import static com.google.common.io.ByteSource.wrap;
 import static com.google.common.io.Files.asByteSink;
 
 import java.io.File;
+import java.io.UncheckedIOException;
 import java.util.Map;
 
 import org.apache.kafka.common.TopicPartition;
@@ -51,5 +52,14 @@ public class SizeByPartitionFunctionTest {
     assertThat(result.size(), is(1));
     long size = result.get(topicPartition);
     assertThat(size, is(1L));
+  }
+
+  @Test(expected = UncheckedIOException.class)
+  public void nonExistentPath() throws Exception {
+    TopicPartition topicPartition = new TopicPartition("topic", 0);
+    Map<TopicPartition, Replica> partitionsAndLogDir = singletonMap(topicPartition,
+        new Replica("non-existent-folder", 0L));
+
+    underTest.apply(partitionsAndLogDir);
   }
 }
