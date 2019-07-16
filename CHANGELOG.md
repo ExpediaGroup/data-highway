@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - Onramp: Log remote address for CIDR Authorisation.
+### Fixed
+- Fix Hazelcast serialisation and add backoff after failure.
 
-## [6.0.9] - TBD
+## [6.0.9] - 2019-07-04
 ### Changed
 - Updated `hotels-oss-parent` to version 4.0.1 (was 2.3.1).
 
