@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.0.11] - 2019-09-02
+### Changed
+- Disabled LDAP health check.
+
 ## [6.0.10] - 2019-07-16
 ### Changed
 - Onramp: Log remote address for CIDR Authorisation.
