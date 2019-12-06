@@ -102,6 +102,7 @@ public class OfframpServiceV2 implements OfframpService {
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      throw new RuntimeException(e);
     } catch (Exception e) {
       log.error("An error occurred while serving", e);
       throw new RuntimeException(e);

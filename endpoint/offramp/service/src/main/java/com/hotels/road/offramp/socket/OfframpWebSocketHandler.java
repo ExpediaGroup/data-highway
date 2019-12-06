@@ -108,7 +108,10 @@ class OfframpWebSocketHandler extends AbstractWebSocketHandler {
     disposable.update(Mono
         .fromRunnable(service)
         .subscribeOn(scheduler)
-        .doOnError(t -> true, t -> close(session, consumer, scheduler, CloseStatus.SERVER_ERROR))
+        .doOnError(t -> true, t -> {
+          log.error("Road: {}, stream: {}, sessionId: {} - Error in OfframpService", roadName, streamName, sessionId, t);
+          close(session, consumer, scheduler, CloseStatus.SERVER_ERROR);
+        })
         .doOnSuccess(x -> close(session, consumer, scheduler, CloseStatus.NORMAL))
         .doOnTerminate(metrics::decrementActiveConnections)
         .subscribe());
