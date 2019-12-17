@@ -24,6 +24,7 @@ import static com.hotels.road.offramp.socket.OfframpHandshakeInterceptor.GRANTS;
 import static com.hotels.road.offramp.socket.OfframpHandshakeInterceptor.ROAD_NAME;
 import static com.hotels.road.offramp.socket.OfframpHandshakeInterceptor.STREAM_NAME;
 import static com.hotels.road.offramp.socket.OfframpHandshakeInterceptor.VERSION;
+import static org.springframework.web.socket.CloseStatus.SERVER_ERROR;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -73,7 +74,7 @@ class OfframpWebSocketHandler extends AbstractWebSocketHandler {
   private String streamName;
   private String sessionId;
 
-  private final Disposable.Swap disposable = Disposables.swap();
+  private final Disposable.Composite disposables = Disposables.composite();
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -105,16 +106,26 @@ class OfframpWebSocketHandler extends AbstractWebSocketHandler {
     Scheduler scheduler = Schedulers.newSingle(
         String.format("offramp[v%s,%s.%s:%s]", version, roadName, streamName, sessionId));
     metrics.incrementActiveConnections();
-    disposable.update(Mono
+
+    Mono<Void> mono = Mono
         .fromRunnable(service)
         .subscribeOn(scheduler)
         .doOnError(t -> true, t -> {
           log.error("Road: {}, stream: {}, sessionId: {} - Error in OfframpService", roadName, streamName, sessionId, t);
-          close(session, consumer, scheduler, CloseStatus.SERVER_ERROR);
         })
-        .doOnSuccess(x -> close(session, consumer, scheduler, CloseStatus.NORMAL))
-        .doOnTerminate(metrics::decrementActiveConnections)
-        .subscribe());
+        .doOnSuccess(s -> {
+          log.info("Road: {}, stream: {}, sessionId: {} - OfframpService Completed", roadName, streamName, sessionId);
+        })
+        .doOnTerminate(() -> {
+          disposables.dispose();
+          metrics.decrementActiveConnections();
+        }).then();
+
+    disposables.add(() -> close(service));
+    disposables.add(() -> close(consumer));
+    disposables.add(() -> close(() -> session.close(SERVER_ERROR)));
+    disposables.add(scheduler);
+    disposables.add(mono.subscribe());
 
     log.info("Road: {}, stream: {}, sessionId: {} - Connection established with defaultOffset: {}", roadName,
         streamName, sessionId, defaultOffset);
@@ -135,7 +146,7 @@ class OfframpWebSocketHandler extends AbstractWebSocketHandler {
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
     log.info("Road: {}, stream: {}, sessionId: {} - Connection closed - code: {}, reason: {}", roadName, streamName,
         sessionId, status.getCode(), status.getReason());
-    disposable.dispose();
+    disposables.dispose();
     metrics.close();
   }
 
@@ -175,22 +186,6 @@ class OfframpWebSocketHandler extends AbstractWebSocketHandler {
       closable.close();
     } catch (Exception e) {
       throw new RuntimeException(e);
-    }
-  }
-
-  private void close(WebSocketSession session, RoadConsumer consumer, Scheduler scheduler, CloseStatus status) {
-    try {
-      close(service);
-    } finally {
-      try {
-        close(consumer);
-      } finally {
-        try {
-          close(() -> session.close(status));
-        } finally {
-          scheduler.dispose();
-        }
-      }
     }
   }
 }
