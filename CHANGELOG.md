@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Changed
+- Onramp: rate limit warn logging of failed CIDR authorisation.
 - Offramp: log error on service error
 - Offramp: throw RuntimeException after interrupt
 

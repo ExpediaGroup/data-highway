@@ -15,28 +15,20 @@
  */
 package com.hotels.road.onramp.controller;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-
-import static lombok.AccessLevel.PACKAGE;
-
 import static com.hotels.road.security.AuthenticationType.AUTHENTICATED;
 import static com.hotels.road.security.AuthorisationOutcome.AUTHORISED;
 import static com.hotels.road.security.AuthorisationOutcome.ERROR;
 import static com.hotels.road.security.AuthorisationOutcome.UNAUTHORISED;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static lombok.AccessLevel.PACKAGE;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
-import org.springframework.stereotype.Component;
-
-import io.micrometer.core.instrument.MeterRegistry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +40,13 @@ import com.hotels.road.security.AuthenticationType;
 import com.hotels.road.security.AuthorisationOutcome;
 import com.hotels.road.security.CidrBlockAuthorisation;
 import com.hotels.road.security.SecurityMetrics;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
+import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
@@ -56,6 +55,8 @@ public class OnrampAuthorisation {
   private final Map<String, Road> store;
   private final CidrBlockAuthorisation cidrBlockAuthorisation;
   private final @Getter(PACKAGE) SecurityMetrics metrics;
+  private final Clock clock = Clock.systemUTC();
+  private Instant lastWarn = Instant.EPOCH;
 
   @Autowired
   public OnrampAuthorisation(
@@ -115,9 +116,17 @@ public class OnrampAuthorisation {
       Optional<Onramp> onramp) {
     List<String> cidrBlocks = onramp.map(Onramp::getCidrBlocks).orElse(emptyList());
     WebAuthenticationDetails details = (WebAuthenticationDetails) authentication.getDetails();
-    boolean result = cidrBlockAuthorisation.isAuthorised(cidrBlocks, details.getRemoteAddress());
+    boolean authorised = cidrBlockAuthorisation.isAuthorised(cidrBlocks, details.getRemoteAddress());
 
-    log.debug("CIDR Authorisation for road: {}, authorised: {}, remoteAddress: {}", roadName, result, details.getRemoteAddress());
-    return result ? AUTHORISED : UNAUTHORISED;
+    log.debug("CIDR Authorisation for road: {}, authorised: {}, remoteAddress: {}", roadName, authorised, details.getRemoteAddress());
+    if (!authorised && log.isWarnEnabled()) {
+      Instant now = clock.instant();
+      if (now.isAfter(lastWarn.plusSeconds(1))) {
+        lastWarn = now;
+        log.warn("CIDR Authorisation failed for road: {}, remoteAddress: {}", roadName, details.getRemoteAddress());
+      }
+    }
+
+    return authorised ? AUTHORISED : UNAUTHORISED;
   }
 }
