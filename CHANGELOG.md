@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [6.0.13] - 2019-12-17
+- Offramp: remove throw RuntimeException after interrupt.
+- Offramp: ensure all resources are closed.
+
+## [6.0.12] - 2019-12-06
 ### Changed
 - Onramp: rate limit warn logging of failed CIDR authorisation.
 - Offramp: log error on service error
