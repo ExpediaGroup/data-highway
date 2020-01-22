@@ -70,6 +70,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler
   public ResponseEntity<StandardResponse> unreadableMessage(HttpMessageNotReadableException e) {
+    log.error("Could not process request", e);
     return status(BAD_REQUEST).body(failureResponse("Unable to parse message: " + e.getMessage()));
   }
 
