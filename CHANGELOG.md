@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [6.1.15] - 2020-01-23
+### Added
+- Logging `HttpMessageNotReadableException`.
+
 ## [6.1.14] - 2020-01-22
 ### Added
 - Onramp: added timer to produce requests.
