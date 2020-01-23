@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016-2019 Expedia, Inc.
+ * Copyright (C) 2016-2020 Expedia, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,13 +65,16 @@ import com.hotels.road.rest.model.RoadType;
 import com.hotels.road.schema.gdpr.InvalidPiiAnnotationException;
 import com.hotels.road.schema.serde.SchemaSerializationModule;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ContextConfiguration(classes = {
     SchemaController.class,
     PaverExceptionHandlers.class,
     GlobalExceptionHandler.class,
-    SchemaSerializationModule.class })
+    SchemaSerializationModule.class,
+    SimpleMeterRegistry.class})
 public class SchemaControllerTest {
   private static final String ROAD_NAME = "road1";
 

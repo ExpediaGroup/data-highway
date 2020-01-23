@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016-2019 Expedia, Inc.
+ * Copyright (C) 2016-2020 Expedia, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,11 +50,14 @@ import com.hotels.road.paver.service.exception.InvalidLandingIntervalException;
 import com.hotels.road.rest.controller.common.GlobalExceptionHandler;
 import com.hotels.road.rest.model.HiveDestinationModel;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
     HiveDestinationController.class,
     PaverExceptionHandlers.class,
-    GlobalExceptionHandler.class })
+    GlobalExceptionHandler.class,
+    SimpleMeterRegistry.class})
 public class HiveDestinationControllerTest {
   private static final String HIVE_DESTINATION_ENDPOINT = CONTEXT_PATH + "/roads/road1/destinations/hive";
   private static final String DESTINATION_JSON = "{}";
