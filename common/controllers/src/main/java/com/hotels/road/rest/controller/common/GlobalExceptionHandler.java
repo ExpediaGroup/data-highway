@@ -23,6 +23,8 @@ import static org.springframework.http.ResponseEntity.status;
 
 import static com.hotels.road.rest.model.StandardResponse.failureResponse;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -31,6 +33,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -40,9 +43,14 @@ import com.hotels.road.exception.ServiceException;
 import com.hotels.road.rest.model.StandardResponse;
 import com.hotels.road.rest.model.validator.ModelValidationException;
 
+import io.micrometer.core.instrument.MeterRegistry;
+
 @ControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+  private final MeterRegistry registry;
+
   @ExceptionHandler
   public ResponseEntity<StandardResponse> accessDeniedException(AccessDeniedException e) {
     return status(FORBIDDEN).body(failureResponse(e.getMessage()));
@@ -69,7 +77,8 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler
-  public ResponseEntity<StandardResponse> unreadableMessage(HttpMessageNotReadableException e) {
+  public ResponseEntity<StandardResponse> unreadableMessage(HttpServletRequest request, HttpMessageNotReadableException e) {
+    registry.counter("http.not.readable.exception", "request_uri", request.getRequestURI()).increment();
     log.error("Could not process request", e);
     return status(BAD_REQUEST).body(failureResponse("Unable to parse message: " + e.getMessage()));
   }
