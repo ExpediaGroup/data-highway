@@ -18,5 +18,5 @@ package com.hotels.road.hive.metastore;
 import java.net.URI;
 
 public interface LocationResolver {
-  URI resolveLocation(String location);
+  URI resolveLocation(String location, boolean create);
 }

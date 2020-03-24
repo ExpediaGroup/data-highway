@@ -70,7 +70,7 @@ public class HivePartitionManagerTest {
   @Test
   public void addPartition() throws Exception {
     doReturn(addedPartition).when(metaStoreClient).add_partition(any());
-    doReturn(URI.create("resolved/location")).when(locationResolver).resolveLocation(LOCATION);
+    doReturn(URI.create("resolved/location")).when(locationResolver).resolveLocation(LOCATION, false);
     doReturn(Instant.ofEpochSecond(1526462225L)).when(clock).instant();
 
     Partition result = underTest.addPartition(TABLE, PARTITION_VALUES, LOCATION).get();
@@ -89,7 +89,7 @@ public class HivePartitionManagerTest {
   @Test(expected = MetaStoreException.class)
   public void addPartition_shouldWrapTException() throws Exception {
     doThrow(TException.class).when(metaStoreClient).add_partition(any());
-    doReturn(URI.create("resolved/location")).when(locationResolver).resolveLocation(LOCATION);
+    doReturn(URI.create("resolved/location")).when(locationResolver).resolveLocation(LOCATION, false);
     doReturn(Instant.ofEpochSecond(1526462225L)).when(clock).instant();
 
     underTest.addPartition(TABLE, PARTITION_VALUES, LOCATION);
@@ -98,7 +98,7 @@ public class HivePartitionManagerTest {
   @Test
   public void addPartition_shouldIgnoreAlreadyExistsException() throws Exception {
     doThrow(AlreadyExistsException.class).when(metaStoreClient).add_partition(any());
-    doReturn(URI.create("resolved/location")).when(locationResolver).resolveLocation(LOCATION);
+    doReturn(URI.create("resolved/location")).when(locationResolver).resolveLocation(LOCATION, false);
     doReturn(Instant.ofEpochSecond(1526462225L)).when(clock).instant();
 
     Optional<Partition> result = underTest.addPartition(TABLE, PARTITION_VALUES, LOCATION);

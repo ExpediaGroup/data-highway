@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -92,14 +93,14 @@ public class HiveTableManagerTest {
 
   @Test
   public void createTable() throws Exception {
-    when(locationResolver.resolveLocation(anyString())).thenReturn(location);
+    when(locationResolver.resolveLocation(anyString(), anyBoolean())).thenReturn(location);
     when(
         hiveTableStrategy.newHiveTable(anyString(), anyString(), anyString(), anyString(), any(Schema.class), anyInt()))
             .thenReturn(table);
 
     underTest.createTable(TABLE, PARTITION_COLUMN, schema, 1, "owner");
 
-    verify(locationResolver).resolveLocation(DATABASE + "/" + TABLE);
+    verify(locationResolver).resolveLocation(DATABASE + "/" + TABLE, true);
     verify(hiveTableStrategy).newHiveTable(DATABASE, TABLE, PARTITION_COLUMN, location.toString(), schema, 1);
     verify(table).setOwner("owner");
     verify(metaStoreClient).createTable(table);
@@ -107,7 +108,7 @@ public class HiveTableManagerTest {
 
   @Test(expected = MetaStoreException.class)
   public void createTable_shouldWrapTException() throws Exception {
-    when(locationResolver.resolveLocation(anyString())).thenReturn(location);
+    when(locationResolver.resolveLocation(anyString(), anyBoolean())).thenReturn(location);
     when(
         hiveTableStrategy.newHiveTable(anyString(), anyString(), anyString(), anyString(), any(Schema.class), anyInt()))
             .thenReturn(table);

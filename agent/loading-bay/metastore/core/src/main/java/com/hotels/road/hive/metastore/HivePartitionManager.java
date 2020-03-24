@@ -50,7 +50,7 @@ public class HivePartitionManager {
       Map<String, String> parameters)
     throws MetaStoreException {
     try {
-      URI resolvedLocation = locationResolver.resolveLocation(location);
+      URI resolvedLocation = locationResolver.resolveLocation(location, false);
       Partition partition = newHivePartition(tableName, partitionValues, resolvedLocation.toString(), parameters);
       partition = metaStoreClient.add_partition(partition);
       return Optional.of(partition);

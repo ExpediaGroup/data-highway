@@ -51,7 +51,7 @@ public class HiveTableManager {
   public Table createTable(String tableName, String partitionColumnName, Schema schema, int version, String owner)
     throws MetaStoreException {
     try {
-      URI location = locationResolver.resolveLocation(databaseName + "/" + tableName);
+      URI location = locationResolver.resolveLocation(databaseName + "/" + tableName, true);
       Table table = hiveTableStrategy.newHiveTable(databaseName, tableName, partitionColumnName, location.toString(),
           schema, version);
       table.setOwner(owner);

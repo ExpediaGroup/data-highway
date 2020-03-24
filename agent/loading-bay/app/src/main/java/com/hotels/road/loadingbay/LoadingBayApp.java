@@ -100,8 +100,10 @@ public class LoadingBayApp {
   }
 
   @Bean
-  public LocationResolver locationResolver(@Value("${hive.table.location.bucket}") String locationBucket) {
-    return new S3LocationResolver(locationBucket, "");
+  public LocationResolver locationResolver(
+      AmazonS3 s3,
+      @Value("${hive.table.location.bucket}") String locationBucket) {
+    return new S3LocationResolver(s3, locationBucket, "");
   }
 
   @Bean

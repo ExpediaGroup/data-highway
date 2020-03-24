@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Metric for `HttpMessageNotReadableException`.
+- Pre-create Hive table directories before creating tables. 
 
 ## [6.1.15] - 2020-01-23
 ### Added
