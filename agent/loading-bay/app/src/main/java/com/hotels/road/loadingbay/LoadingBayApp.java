@@ -157,7 +157,7 @@ public class LoadingBayApp {
       @Value("${maxRecordsPerPartition:100000}") long maxRecordsPerPartition,
       @Value("${s3.enableServerSideEncryption:false}") boolean enableServerSideEncryption,
       @Value("${jitter:true}") boolean jitter,
-      @Value("landingTimeoutMinutes:30") int landingTimeoutMinutes) {
+      @Value("${landingTimeoutMinutes:30}") int landingTimeoutMinutes) {
     return road -> {
       LanderTaskRunner runnable = new LanderTaskRunner(meterRegistry, offsetManager, road.getName(),
           road.getTopicName(), database, hivePartitionManager, landerFactory, landingHandler, emitter, clock,
