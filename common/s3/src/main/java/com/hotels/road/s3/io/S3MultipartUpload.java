@@ -63,7 +63,7 @@ class S3MultipartUpload {
 
   PartETag upload(String uploadId, S3Part part) {
     Object[] logParams = new Object[] { part.getSize(), part.getNumber(), bucket, key };
-    log.info("Uploading {} bytes for part {} to s3://{}/{}.", logParams);
+    log.debug("Uploading {} bytes for part {} to s3://{}/{}.", logParams);
     UploadPartRequest request = new UploadPartRequest()
         .withUploadId(uploadId)
         .withBucketName(bucket)
@@ -73,7 +73,7 @@ class S3MultipartUpload {
         .withMD5Digest(part.getMd5())
         .withInputStream(part.getInputStream());
     UploadPartResult result = s3.uploadPart(request);
-    log.info("Uploaded {} bytes for part {} to s3://{}/{}.", logParams);
+    log.debug("Uploaded {} bytes for part {} to s3://{}/{}.", logParams);
     bytes += part.getSize();
     return result.getPartETag();
   }
