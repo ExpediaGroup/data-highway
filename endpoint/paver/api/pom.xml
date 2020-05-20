@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels.road</groupId>
     <artifactId>road-paver</artifactId>
-    <version>6.0.20-SNAPSHOT</version>
+    <version>6.0.20</version>
   </parent>
 
   <artifactId>road-paver-api</artifactId>
