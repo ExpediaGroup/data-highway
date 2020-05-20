@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016-2019 Expedia, Inc.
+ * Copyright (C) 2016-2020 Expedia, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,6 +88,7 @@ public class LanderTaskRunnerTest {
 
   private final long runtimeMillis = 1526462224000L;
   long maxRecordsPerPartition = 100L;
+  int landingTimeoutMinutes = 30;
   private LanderTaskRunner underTest;
   private LanderConfiguration expectedLanderConfiguration;
   private String partitionColumnValue;
@@ -106,7 +107,7 @@ public class LanderTaskRunnerTest {
   @Before
   public void setUp() {
     underTest = new LanderTaskRunner(registry, offsetManager, ROAD_NAME, TOPIC_NAME, DATABASE, hivePartitionManager,
-        landerFactory, landingNotifier, emitter, clock, maxRecordsPerPartition, false);
+        landerFactory, landingNotifier, emitter, clock, maxRecordsPerPartition, false, landingTimeoutMinutes);
 
     expectedOffsets = new HashMap<>();
     expectedOffsets.put(1, new OffsetRange(5, 10));

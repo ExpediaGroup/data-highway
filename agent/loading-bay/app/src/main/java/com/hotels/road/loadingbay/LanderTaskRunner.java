@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016-2019 Expedia, Inc.
+ * Copyright (C) 2016-2020 Expedia, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,6 +68,7 @@ public class LanderTaskRunner {
   private final PatchSetEmitter emitter;
   private final Clock clock;
   private final long maxRecordsPerPartition;
+  private final int landingTimeoutMinutes;
   private volatile State state;
 
   public LanderTaskRunner(
@@ -82,7 +83,8 @@ public class LanderTaskRunner {
       PatchSetEmitter emitter,
       Clock clock,
       long maxRecordsPerPartition,
-      boolean enableServerSideEncryption) {
+      boolean enableServerSideEncryption,
+      int landingTimeoutMinutes) {
     this.offsetManager = offsetManager;
     this.roadName = roadName;
     this.topicName = topicName;
@@ -94,6 +96,7 @@ public class LanderTaskRunner {
     this.clock = clock;
     this.maxRecordsPerPartition = maxRecordsPerPartition;
     this.enableServerSideEncryption = enableServerSideEncryption;
+    this.landingTimeoutMinutes = landingTimeoutMinutes;
     landingTimer = Timer
         .builder("loading-bay.landing-time")
         .tag("road", roadName)
@@ -132,7 +135,7 @@ public class LanderTaskRunner {
       LanderConfiguration landerConfiguration = prepareLanderConfiguration(acquisitionInstant);
       CompletableFuture<LanderConfiguration> future = landerFactory.newInstance(landerConfiguration).run();
       try {
-        future.get(30, MINUTES);
+        future.get(landingTimeoutMinutes, MINUTES);
         updateMetadata(landerConfiguration);
         long totalMessages = landerConfiguration
             .getOffsets()

@@ -68,7 +68,7 @@ class TruckPark implements ApplicationRunner {
     running.values().forEach(partition -> consumer.seek(partition, offsets.get(partition).getStart()));
     log.info("Offsets {}", offsets);
     while (running.size() > 0) {
-      log.info("Running {}", running.values());
+      log.debug("Running {}", running.values());
       for (ConsumerRecord<Void, Record> record : consumer.poll(pollTimeout)) {
         TopicPartition topicPartition = running.get(record.partition());
         if (topicPartition != null) {

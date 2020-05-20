@@ -6,14 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- Loading Bay - Added `landingTimeoutMinutes` property.
+
+## [6.0.16] - 2020-03-24
+### Added
 - Metric for `HttpMessageNotReadableException`.
 - Pre-create Hive table directories before creating tables. 
 
-## [6.1.15] - 2020-01-23
+## [6.0.15] - 2020-01-23
 ### Added
 - Logging `HttpMessageNotReadableException`.
 
-## [6.1.14] - 2020-01-22
+## [6.0.14] - 2020-01-22
 ### Added
 - Onramp: added timer to produce requests.
 - Bumped commons-compress version due to reported security vulnerability.

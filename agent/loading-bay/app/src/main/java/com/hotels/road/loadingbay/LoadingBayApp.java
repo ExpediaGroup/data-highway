@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016-2019 Expedia, Inc.
+ * Copyright (C) 2016-2020 Expedia, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -156,11 +156,12 @@ public class LoadingBayApp {
       HiveNotificationHandler landingHandler,
       @Value("${maxRecordsPerPartition:100000}") long maxRecordsPerPartition,
       @Value("${s3.enableServerSideEncryption:false}") boolean enableServerSideEncryption,
-      @Value("${jitter:true}") boolean jitter) {
+      @Value("${jitter:true}") boolean jitter,
+      @Value("landingTimeoutMinutes:30") int landingTimeoutMinutes) {
     return road -> {
       LanderTaskRunner runnable = new LanderTaskRunner(meterRegistry, offsetManager, road.getName(),
           road.getTopicName(), database, hivePartitionManager, landerFactory, landingHandler, emitter, clock,
-          maxRecordsPerPartition, enableServerSideEncryption);
+          maxRecordsPerPartition, enableServerSideEncryption, landingTimeoutMinutes);
       OffsetDateTime landerLastRun = Optional
           .ofNullable(road.getDestinations())
           .map(Destinations::getHive)
