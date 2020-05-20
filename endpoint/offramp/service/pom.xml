@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels.road</groupId>
     <artifactId>road-offramp</artifactId>
-    <version>6.0.17</version>
+    <version>6.0.18-SNAPSHOT</version>
   </parent>
 
   <artifactId>road-offramp-service</artifactId>
