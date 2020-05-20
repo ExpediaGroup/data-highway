@@ -9,7 +9,7 @@
 
   <groupId>com.hotels.road</groupId>
   <artifactId>road-parent</artifactId>
-  <version>6.0.21-SNAPSHOT</version>
+  <version>6.0.21</version>
   <packaging>pom</packaging>
   <inceptionYear>2016</inceptionYear>
   <description>
@@ -25,7 +25,7 @@
     <connection>scm:git:git@github.com:HotelsDotCom/data-highway.git</connection>
     <developerConnection>scm:git:git@github.com:HotelsDotCom/data-highway.git</developerConnection>
     <url>https://github.com/HotelsDotCom/data-highway</url>
-    <tag>HEAD</tag>
+    <tag>road-parent-6.0.21</tag>
   </scm>
 
   <properties>
