@@ -12,7 +12,7 @@
   <description>Common classes API documentation with swagger</description>
 
   <properties>
-    <docker.name>road-swagger</docker.name>
+    <docker.to.name>road-swagger</docker.to.name>
   </properties>
 
   <dependencies>

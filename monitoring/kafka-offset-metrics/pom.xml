@@ -12,7 +12,7 @@
   <description>Kafka Offset Metrics module of Data Highway to monitor Kafka Offsets</description>
 
   <properties>
-    <docker.name>road-kafka-offset-metrics</docker.name>
+    <docker.to.name>road-kafka-offset-metrics</docker.to.name>
   </properties>
 
   <dependencies>

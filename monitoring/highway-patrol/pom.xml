@@ -12,7 +12,7 @@
   <description>Highway Patrol of Data Highway that monitors service level</description>
 
   <properties>
-    <docker.name>road-highway-patrol</docker.name>
+    <docker.to.name>road-highway-patrol</docker.to.name>
   </properties>
 
   <dependencies>

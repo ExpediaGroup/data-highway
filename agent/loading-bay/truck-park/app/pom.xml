@@ -11,7 +11,7 @@
   <description>Data Highway application for landing road data to S3</description>
 
   <properties>
-    <docker.name>road-truckpark</docker.name>
+    <docker.to.name>road-truckpark</docker.to.name>
   </properties>
 
   <dependencies>

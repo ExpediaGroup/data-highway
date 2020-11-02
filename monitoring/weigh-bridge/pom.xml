@@ -12,7 +12,7 @@
   <description>Weigh Bridge module of Data Highway</description>
 
   <properties>
-    <docker.name>road-weigh-bridge</docker.name>
+    <docker.to.name>road-weigh-bridge</docker.to.name>
     <docker.container.port>8081</docker.container.port>
   </properties>
 

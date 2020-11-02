@@ -11,7 +11,7 @@
   <description>Data Highway agent for managing the landing of road data to S3 and Hive.</description>
 
   <properties>
-    <docker.name>road-loading-bay</docker.name>
+    <docker.to.name>road-loading-bay</docker.to.name>
   </properties>
 
   <dependencies>

@@ -11,7 +11,7 @@
   <description>Spring Boot application of the Paver service of Data Highway</description>
 
   <properties>
-    <docker.name>road-paver</docker.name>
+    <docker.to.name>road-paver</docker.to.name>
   </properties>
 
   <dependencies>

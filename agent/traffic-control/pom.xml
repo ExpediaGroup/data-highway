@@ -12,7 +12,7 @@
   <description>Data Highway agent for managing Kafka.</description>
 
   <properties>
-    <docker.name>road-traffic-control</docker.name>
+    <docker.to.name>road-traffic-control</docker.to.name>
   </properties>
 
   <dependencies>

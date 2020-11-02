@@ -11,7 +11,7 @@
   <description>Spring Boot application of the Onramp service of Data Highway</description>
 
   <properties>
-    <docker.name>road-onramp</docker.name>
+    <docker.to.name>road-onramp</docker.to.name>
   </properties>
 
   <dependencies>

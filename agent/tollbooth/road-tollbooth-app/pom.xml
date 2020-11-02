@@ -11,7 +11,7 @@
   <description>Data Highway agent to apply patches of road models</description>
 
   <properties>
-    <docker.name>road-tollbooth</docker.name>
+    <docker.to.name>road-tollbooth</docker.to.name>
   </properties>
 
   <dependencies>

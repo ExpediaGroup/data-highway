@@ -12,7 +12,7 @@
   <description>Mock up of Data Highway core which mocks Kafka in-memory</description>
 
   <properties>
-    <docker.name>road-test-drive</docker.name>
+    <docker.to.name>road-test-drive</docker.to.name>
   </properties>
 
   <dependencies>

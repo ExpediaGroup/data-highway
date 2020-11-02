@@ -12,7 +12,7 @@
   <description>Data Highway agent to back up road models to S3</description>
 
   <properties>
-    <docker.name>road-towtruck</docker.name>
+    <docker.to.name>road-towtruck</docker.to.name>
   </properties>
 
   <dependencies>

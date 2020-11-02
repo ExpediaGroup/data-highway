@@ -62,10 +62,16 @@
     <springfox.version>2.8.0</springfox.version>
     <wiremock.version>2.15.0</wiremock.version>
 
-    <docker.repo>hotelsdotcom</docker.repo>
-    <docker.name>${project.artifactId}</docker.name>
-    <docker.tag>${project.version}</docker.tag>
-    <docker.to.image>${docker.repo}/${docker.name}:${docker.tag}</docker.to.image>
+    <docker.from.repo></docker.from.repo>
+    <docker.from.name>openjdk</docker.from.name>
+    <docker.from.tag>11.0.1-jdk-slim</docker.from.tag>
+    <docker.from.image>${docker.from.repo}${docker.from.name}:${docker.from.tag}</docker.from.image>
+
+    <docker.to.repo>hotelsdotcom/</docker.to.repo>
+    <docker.to.name>${project.artifactId}</docker.to.name>
+    <docker.to.tag>${project.version}</docker.to.tag>
+    <docker.to.image>${docker.to.repo}${docker.to.name}:${docker.to.tag}</docker.to.image>
+
     <docker.container.port>8080</docker.container.port>
     <jib.goal>build</jib.goal>
 
@@ -567,7 +573,7 @@
           </executions>
           <configuration>
             <from>
-              <image>openjdk:11.0.1-jdk-slim</image>
+              <image>${docker.from.image}</image>
             </from>
             <to>
               <image>${docker.to.image}</image>
